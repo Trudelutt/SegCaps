@@ -1,7 +1,7 @@
 # Capsules for Object Segmentation (SegCaps)
 ### by [Rodney LaLonde](https://rodneylalonde.wixsite.com/personal) and [Ulas Bagci](http://www.cs.ucf.edu/~bagci/)
 
-## This repo is the official implementation of SegCaps
+## This repo is forked from the official implementation of SegCaps and is being used for coronary artery segmentation
 
 The original paper for SegCaps can be found at https://arxiv.org/abs/1804.04241.
 
