@@ -247,8 +247,8 @@ class DeconvCapsuleLayer(layers.Layer):
             batch_size = input_shape[1] * input_shape[0]
 
             # Infer the dynamic output shape:
-            out_height = deconv_length(self.input_height, self.scaling, self.kernel_size, self.padding)
-            out_width = deconv_length(self.input_width, self.scaling, self.kernel_size, self.padding)
+            out_height = deconv_length(self.input_height, self.scaling, self.kernel_size, self.padding, None)
+            out_width = deconv_length(self.input_width, self.scaling, self.kernel_size, self.padding, None)
             output_shape = (batch_size, out_height, out_width, self.num_capsule * self.num_atoms)
 
             outputs = K.conv2d_transpose(input_tensor_reshaped, self.W, output_shape, (self.scaling, self.scaling),
@@ -280,8 +280,8 @@ class DeconvCapsuleLayer(layers.Layer):
     def compute_output_shape(self, input_shape):
         output_shape = list(input_shape)
 
-        output_shape[1] = deconv_length(output_shape[1], self.scaling, self.kernel_size, self.padding)
-        output_shape[2] = deconv_length(output_shape[2], self.scaling, self.kernel_size, self.padding)
+        output_shape[1] = deconv_length(output_shape[1], self.scaling, self.kernel_size, self.padding, None)
+        output_shape[2] = deconv_length(output_shape[2], self.scaling, self.kernel_size, self.padding, None)
         output_shape[3] = self.num_capsule
         output_shape[4] = self.num_atoms
 

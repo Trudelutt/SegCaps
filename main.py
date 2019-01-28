@@ -24,8 +24,16 @@ from keras.utils import print_summary
 from load_3D_data import load_data, split_data
 from model_helper import create_model
 
+def gpu_config():
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth=True
+    config.gpu_options.per_process_gpu_memory_fraction = 0.6
+    #set_session(tf.Session(config = config))
+    sess = tf.Session(config=config)
+    sess.run(tf.global_variables_initializer())
 
 def main(args):
+    gpu_config()
     # Ensure training, testing, and manip are not all turned off
     assert (args.train or args.test or args.manip), 'Cannot have train, test, and manip all set to 0, Nothing to do.'
 
