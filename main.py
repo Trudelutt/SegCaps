@@ -16,6 +16,7 @@ from os import makedirs
 from os import environ
 import argparse
 import SimpleITK as sitk
+import tensorflow as tf
 from time import gmtime, strftime
 time = strftime("%Y-%m-%d-%H:%M:%S", gmtime())
 
