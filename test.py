@@ -125,6 +125,7 @@ def test(args, test_list, model_list, net_input_shape):
         writer.writerow(row)
 
         for i, img in enumerate(tqdm(test_list)):
+            #TODO this must change
             sitk_img = sitk.ReadImage(join(args.data_root_dir, 'imgs', img[0]))
             img_data = sitk.GetArrayFromImage(sitk_img)
             num_slices = img_data.shape[0]
@@ -153,10 +154,11 @@ def test(args, test_list, model_list, net_input_shape):
             output_mask.CopyInformation(sitk_img)
 
             print('Saving Output')
-            sitk.WriteImage(output_img, join(raw_out_dir, img[0][:-8] + '_raw_output' + img[0][-8:]))
-            sitk.WriteImage(output_mask, join(fin_out_dir, img[0][:-8] + '_final_output' + img[0][-8:]))
+            sitk.WriteImage(output_img, join(raw_out_dir, img[0][:-7] + '_raw_output' + img[0][-7:]))
+            sitk.WriteImage(output_mask, join(fin_out_dir, img[0][:-7] + '_final_output' + img[0][-7:]))
 
             # Load gt mask
+            #TODO change to get correcr mask name
             sitk_mask = sitk.ReadImage(join(args.data_root_dir, 'masks', img[0]))
             gt_data = sitk.GetArrayFromImage(sitk_mask)
 
@@ -186,13 +188,13 @@ def test(args, test_list, model_list, net_input_shape):
             ax[2].axis('off')
 
             fig = plt.gcf()
-            fig.suptitle(img[0][:-8])
+            fig.suptitle(img[0][:-7])
 
-            plt.savefig(join(fig_out_dir, img[0][:-8] + '_qual_fig' + '.png'),
+            plt.savefig(join(fig_out_dir, img[0][:-7] + '_qual_fig' + '.png'),
                         format='png', bbox_inches='tight')
             plt.close('all')
 
-            row = [img[0][:-8]]
+            row = [img[0][:-7]]
             if args.compute_dice:
                 print('Computing Dice')
                 dice_arr[i] = dc(output_bin, gt_data)

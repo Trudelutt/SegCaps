@@ -304,12 +304,12 @@ def generate_train_batches(root_path, train_list, net_input_shape, net, batchSiz
         for i, scan_name in enumerate(train_list):
             try:
                 scan_name = scan_name[0]
-                path_to_np = join(root_path,'np_files',basename(scan_name)[:-3]+'npz')
+                path_to_np = join(root_path,'np_files',basename(scan_name)[:-7]+'npz')
                 with np.load(path_to_np) as data:
                     train_img = data['img']
                     train_mask = data['mask']
             except:
-                print('\nPre-made numpy array not found for {}.\nCreating now...'.format(scan_name[:-8]))
+                print('\nPre-made numpy array not found for {}.\nCreating now...'.format(scan_name[:-7]))
                 train_img, train_mask = convert_data_to_numpy(root_path, scan_name)
                 if np.array_equal(train_img,np.zeros(1)):
                     continue
@@ -383,12 +383,12 @@ def generate_val_batches(root_path, val_list, net_input_shape, net, batchSize=1,
         for i, scan_name in enumerate(val_list):
             try:
                 scan_name = scan_name[0]
-                path_to_np = join(root_path,'np_files',basename(scan_name)[:-3]+'npz')
+                path_to_np = join(root_path,'np_files',basename(scan_name)[:-7]+'npz')
                 with np.load(path_to_np) as data:
                     val_img = data['img']
                     val_mask = data['mask']
             except:
-                print('\nPre-made numpy array not found for {}.\nCreating now...'.format(scan_name[:-8]))
+                print('\nPre-made numpy array not found for {}.\nCreating now...'.format(scan_name[:-7]))
                 val_img, val_mask = convert_data_to_numpy(root_path, scan_name)
                 if np.array_equal(val_img,np.zeros(1)):
                     continue
@@ -447,7 +447,7 @@ def generate_test_batches(root_path, test_list, net_input_shape, batchSize=1, nu
             with np.load(path_to_np) as data:
                 test_img = data['img']
         except:
-            print('\nPre-made numpy array not found for {}.\nCreating now...'.format(scan_name[:-8]))
+            print('\nPre-made numpy array not found for {}.\nCreating now...'.format(scan_name[:-7]))
             test_img = convert_data_to_numpy(root_path, scan_name, no_masks=True)
             if np.array_equal(test_img,np.zeros(1)):
                 continue

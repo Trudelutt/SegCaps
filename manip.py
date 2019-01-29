@@ -98,6 +98,6 @@ def manip(args, test_list, model_list, net_input_shape):
         out_image[out_image > 574] = 574
         out_image = out_image / 574 * 255
 
-        Image.fromarray(out_image.astype(np.uint8)).save(join(manip_out_dir, img[0][:-8] + '_manip_output.png'))
+        Image.fromarray(out_image.astype(np.uint8)).save(join(manip_out_dir, img[0][:-7] + '_manip_output.png'))
 
     print('Done.')
