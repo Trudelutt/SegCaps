@@ -153,8 +153,8 @@ def test(args, test_list, model_list, net_input_shape):
             output_mask.CopyInformation(sitk_img)
 
             print('Saving Output')
-            sitk.WriteImage(output_img, join(raw_out_dir, img[0][:-7] + '_raw_output' + img[0][-7:]))
-            sitk.WriteImage(output_mask, join(fin_out_dir, img[0][:-7] + '_final_output' + img[0][-7:]))
+            sitk.WriteImage(output_img, join(raw_out_dir, img[0][:-8] + '_raw_output' + img[0][-8:]))
+            sitk.WriteImage(output_mask, join(fin_out_dir, img[0][:-8] + '_final_output' + img[0][-8:]))
 
             # Load gt mask
             sitk_mask = sitk.ReadImage(join(args.data_root_dir, 'masks', img[0]))
@@ -186,13 +186,13 @@ def test(args, test_list, model_list, net_input_shape):
             ax[2].axis('off')
 
             fig = plt.gcf()
-            fig.suptitle(img[0][:-7])
+            fig.suptitle(img[0][:-8])
 
-            plt.savefig(join(fig_out_dir, img[0][:-7] + '_qual_fig' + '.png'),
+            plt.savefig(join(fig_out_dir, img[0][:-8] + '_qual_fig' + '.png'),
                         format='png', bbox_inches='tight')
             plt.close('all')
 
-            row = [img[0][:-7]]
+            row = [img[0][:-8]]
             if args.compute_dice:
                 print('Computing Dice')
                 dice_arr[i] = dc(output_bin, gt_data)
