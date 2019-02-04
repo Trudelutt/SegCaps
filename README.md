@@ -1,7 +1,7 @@
 # Capsules for Object Segmentation (SegCaps)
 ### by [Rodney LaLonde](https://rodneylalonde.wixsite.com/personal) and [Ulas Bagci](http://www.cs.ucf.edu/~bagci/)
 
-## This repo is forked from the official implementation of SegCaps and is being used for coronary artery segmentation
+## This repo is forked from the official implementation of SegCaps and is being used for coronary artery segmentation and is based on
 
 The original paper for SegCaps can be found at https://arxiv.org/abs/1804.04241.
 
@@ -48,7 +48,7 @@ Inside the data root folder (*i.e.* where you have your data stored) you should 
 
 ### Main File
 
-From the main file (main.py) you can train, test, and manipulate the segmentation capsules of various networks. Simply set the ```--train```, ```--test```, or ```--manip flags``` to 0 or 1 to turn these off or on respectively. The argument ```--data_root_dir``` is the only required argument and should be set to the directory containing your *imgs* and *masks* folders. There are many more arguments that can be set and these are all explained in the main.py file. 
+From the main file (main.py) you can train, test, and manipulate the segmentation capsules of various networks. Simply set the ```--train```, ```--test```, or ```--manip flags``` to 0 or 1 to turn these off or on respectively. The argument ```--data_root_dir``` is the only required argument and should be set to the directory containing your *imgs* and *masks* folders. There are many more arguments that can be set and these are all explained in the main.py file.
 
 ### Citation
 
