@@ -35,13 +35,13 @@ from custom_data_aug import elastic_transform, salt_pepper_noise
 
 debug = 0
 
-def load_data(root, split):
+def load_data( split):
     # Load the training and testing lists
-    with open(join(root, 'split_lists', 'train_split_' + str(split) + '.csv'), 'rb') as f:
+    with open(join('split_lists', 'train_split_' + str(split) + '.csv'), 'rb') as f:
         reader = csv.reader(f)
         training_list = list(reader)
 
-    with open(join(root, 'split_lists', 'test_split_' + str(split) + '.csv'), 'rb') as f:
+    with open(join( 'split_lists', 'test_split_' + str(split) + '.csv'), 'rb') as f:
         reader = csv.reader(f)
         testing_list = list(reader)
 
@@ -49,7 +49,7 @@ def load_data(root, split):
 
     return new_training_list, validation_list, testing_list
 
-def compute_class_weights(root, train_data_list):
+def compute_class_weights(train_data_list):
     '''
         We want to weight the the positive pixels by the ratio of negative to positive.
         Three scenarios:
@@ -61,7 +61,7 @@ def compute_class_weights(root, train_data_list):
     pos = 0.0
     neg = 0.0
     for img_name in tqdm(train_data_list):
-        img = sitk.GetArrayFromImage(sitk.ReadImage(join(root, 'masks', img_name[0])))
+        img = sitk.GetArrayFromImage(sitk.ReadImage(img_name[0]))
         for slic in img:
             if not np.any(slic):
                 continue
@@ -72,28 +72,25 @@ def compute_class_weights(root, train_data_list):
 
     return neg/pos
 
-def load_class_weights(root, split):
-    class_weight_filename = join(root, 'split_lists', 'train_split_' + str(split) + '_class_weights.npy')
+def load_class_weights( split):
+    class_weight_filename = join( 'split_lists', 'train_split_' + str(split) + '_class_weights.npy')
     try:
         return np.load(class_weight_filename)
     except:
         print('Class weight file {} not found.\nComputing class weights now. This may take '
               'some time.'.format(class_weight_filename))
-        train_data_list, _, _ = load_data(root, str(split))
-        value = compute_class_weights(root, train_data_list)
+        train_data_list, _, _ = load_data(str(split))
+        value = compute_class_weights(train_data_list)
         np.save(class_weight_filename,value)
         print('Finished computing class weights. This value has been saved for this training split.')
         return value
 
 
-def split_data(root_path, num_splits=4):
-    mask_list = []
-    for ext in ('*.mhd', '*.hdr', '*.nii', '*.nii.gz'):
-        mask_list.extend(sorted(glob(join(root_path,'masks',ext))))
+def split_data(root_path, label, num_splits=4):
+    mask_list= glob(join(root_path,"*/*/*/*" + label + ".nii.gz"))
+    assert len(mask_list) != 0, 'Unable to find any files in {}'.format(join(root_path,"/*/*/*"+ label))
 
-    assert len(mask_list) != 0, 'Unable to find any files in {}'.format(join(root_path,'masks'))
-
-    outdir = join(root_path,'split_lists')
+    outdir = 'split_lists'
     try:
         mkdir(outdir)
     except:
@@ -105,20 +102,21 @@ def split_data(root_path, num_splits=4):
         with open(join(outdir,'train_split_' + str(n) + '.csv'), 'wb') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             for i in train_index:
-                writer.writerow([basename(mask_list[i])])
+                writer.writerow([mask_list[i]])
         with open(join(outdir,'test_split_' + str(n) + '.csv'), 'wb') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             for i in test_index:
-                writer.writerow([basename(mask_list[i])])
+                writer.writerow([mask_list[i]])
         n += 1
 
 
-def convert_data_to_numpy(root_path, img_name, no_masks=False, overwrite=False):
-    fname = img_name[:-8]
-    numpy_path = join(root_path, 'np_files')
-    img_path = join(root_path, 'imgs')
-    mask_path = join(root_path, 'masks')
-    fig_path = join(root_path, 'figs')
+def convert_data_to_numpy(label, img_name, no_masks=False, overwrite=False):
+    print("Converting numpy")
+    fname = basename(img_name[:-7])
+    numpy_path = 'np_files'
+    img_path = img_name.replace(label, "CCTA")
+    #mask_path = join(root_path, 'masks')
+    fig_path = 'figs'
     try:
         mkdir(numpy_path)
     except:
@@ -136,10 +134,12 @@ def convert_data_to_numpy(root_path, img_name, no_masks=False, overwrite=False):
             with np.load(join(numpy_path, fname + '.npz')) as data:
                 return data['img'], data['mask']
         except:
+            print("Something went wrong")
+            print(join(numpy_path, fname + '.npz'))
             pass
 
     try:
-        itk_img = sitk.ReadImage(join(img_path, img_name))
+        itk_img = sitk.ReadImage(img_path)
         img = sitk.GetArrayFromImage(itk_img)
         img = np.rollaxis(img, 0, 3)
         img = img.astype(np.float32)
@@ -149,7 +149,7 @@ def convert_data_to_numpy(root_path, img_name, no_masks=False, overwrite=False):
         img /= (ct_max + -ct_min)
 
         if not no_masks:
-            itk_mask = sitk.ReadImage(join(mask_path, img_name))
+            itk_mask = sitk.ReadImage(img_name)
             mask = sitk.GetArrayFromImage(itk_mask)
             mask = np.rollaxis(mask, 0, 3)
             mask[mask > 250] = 1 # In case using 255 instead of 1
@@ -291,7 +291,7 @@ def threadsafe_generator(f):
     return g
 
 @threadsafe_generator
-def generate_train_batches(root_path, train_list, net_input_shape, net, batchSize=1, numSlices=1, subSampAmt=-1,
+def generate_train_batches(label,root_path, train_list, net_input_shape, net, batchSize=1, numSlices=1, subSampAmt=-1,
                            stride=1, downSampAmt=1, shuff=1, aug_data=1):
     # Create placeholders for training
     img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.float32)
@@ -304,18 +304,17 @@ def generate_train_batches(root_path, train_list, net_input_shape, net, batchSiz
         for i, scan_name in enumerate(train_list):
             try:
                 scan_name = scan_name[0]
-                path_to_np = join(root_path,'np_files',basename(scan_name)[:-7]+'npz')
+                path_to_np = join('np_files',basename(scan_name)[:-7]+'.npz')
                 with np.load(path_to_np) as data:
                     train_img = data['img']
                     train_mask = data['mask']
             except:
-                print('\nPre-made numpy array not found for {}.\nCreating now...'.format(scan_name[:-7]))
-                train_img, train_mask = convert_data_to_numpy(root_path, scan_name)
+                print('\nPre-made numpy array not found for {}.\nCreating now...'.format(join('np_files',basename(scan_name)[:-7]+'.npz')))
+                train_img, train_mask = convert_data_to_numpy(label, scan_name)
                 if np.array_equal(train_img,np.zeros(1)):
                     continue
                 else:
                     print('\nFinished making npz file.')
-
             if numSlices == 1:
                 subSampAmt = 0
             elif subSampAmt == -1 and numSlices > 1:
@@ -370,7 +369,7 @@ def generate_train_batches(root_path, train_list, net_input_shape, net, batchSiz
                 yield (img_batch[:count,...], mask_batch[:count,...])
 
 @threadsafe_generator
-def generate_val_batches(root_path, val_list, net_input_shape, net, batchSize=1, numSlices=1, subSampAmt=-1,
+def generate_val_batches(label, root_path, val_list, net_input_shape, net, batchSize=1, numSlices=1, subSampAmt=-1,
                          stride=1, downSampAmt=1, shuff=1):
     # Create placeholders for validation
     img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.float32)
@@ -383,13 +382,14 @@ def generate_val_batches(root_path, val_list, net_input_shape, net, batchSize=1,
         for i, scan_name in enumerate(val_list):
             try:
                 scan_name = scan_name[0]
-                path_to_np = join(root_path,'np_files',basename(scan_name)[:-7]+'npz')
+                path_to_np = join(root_path,'np_files',basename(scan_name)[:-7]+'.npz')
+                print(path_to_np)
                 with np.load(path_to_np) as data:
                     val_img = data['img']
                     val_mask = data['mask']
             except:
                 print('\nPre-made numpy array not found for {}.\nCreating now...'.format(scan_name[:-7]))
-                val_img, val_mask = convert_data_to_numpy(root_path, scan_name)
+                val_img, val_mask = convert_data_to_numpy(label, scan_name)
                 if np.array_equal(val_img,np.zeros(1)):
                     continue
                 else:
@@ -435,7 +435,7 @@ def generate_val_batches(root_path, val_list, net_input_shape, net, batchSize=1,
                 yield (img_batch[:count,...], mask_batch[:count,...])
 
 @threadsafe_generator
-def generate_test_batches(root_path, test_list, net_input_shape, batchSize=1, numSlices=1, subSampAmt=0,
+def generate_test_batches(label, root_path, test_list, net_input_shape, batchSize=1, numSlices=1, subSampAmt=0,
                           stride=1, downSampAmt=1):
     # Create placeholders for testing
     img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.float32)
@@ -443,12 +443,12 @@ def generate_test_batches(root_path, test_list, net_input_shape, batchSize=1, nu
     for i, scan_name in enumerate(test_list):
         try:
             scan_name = scan_name[0]
-            path_to_np = join(root_path,'np_files',basename(scan_name)[:-3]+'npz')
+            path_to_np = join(root_path,'np_files',basename(scan_name)[:-7]+'.npz')
             with np.load(path_to_np) as data:
                 test_img = data['img']
         except:
             print('\nPre-made numpy array not found for {}.\nCreating now...'.format(scan_name[:-7]))
-            test_img = convert_data_to_numpy(root_path, scan_name, no_masks=True)
+            test_img = convert_data_to_numpy(label, scan_name, no_masks=True)
             if np.array_equal(test_img,np.zeros(1)):
                 continue
             else:

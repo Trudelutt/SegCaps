@@ -1,5 +1,11 @@
 **/.idea/
 **.pyc
+*.pyc
+/__pycache__
 **/saved_models/
 **/*.py~
-
+.bash_history
+figs/
+logs/
+np_files/
+split_lists/

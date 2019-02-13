@@ -34,20 +34,21 @@ def gpu_config():
     sess.run(tf.global_variables_initializer())
 
 def main(args):
-    gpu_config()
+    #gpu_config()
     # Ensure training, testing, and manip are not all turned off
     assert (args.train or args.test or args.manip), 'Cannot have train, test, and manip all set to 0, Nothing to do.'
 
     # Load the training, validation, and testing data
     try:
-        train_list, val_list, test_list = load_data(args.data_root_dir, args.split_num)
+        train_list, val_list, test_list = load_data( args.split_num)
     except:
         # Create the training and test splits if not found
-        split_data(args.data_root_dir, num_splits=4)
-        train_list, val_list, test_list = load_data(args.data_root_dir, args.split_num)
+        split_data(args.data_root_dir, args.label, num_splits=4)
+        train_list, val_list, test_list = load_data( args.split_num)
 
     # Get image properties from first image. Assume they are all the same.
-    img_shape = sitk.GetArrayFromImage(sitk.ReadImage(join(args.data_root_dir, 'imgs', train_list[0][0]))).shape
+    #img_shape = sitk.GetArrayFromImage(sitk.ReadImage(join(args.data_root_dir, 'imgs', train_list[0][0]))).shape
+    img_shape = sitk.GetArrayFromImage(sitk.ReadImage(train_list[0][0].replace(args.label, "CCTA"))).shape
     net_input_shape = (img_shape[1], img_shape[2], args.slices)
 
     # Create the model for training/testing/manipulation
@@ -61,13 +62,13 @@ def main(args):
                        '_lr-' + str(args.initial_lr) + '_recon-' + str(args.recon_wei)
     args.time = time
 
-    args.check_dir = join(args.data_root_dir,'saved_models', args.net)
+    args.check_dir = join('saved_models', args.net)
     try:
         makedirs(args.check_dir)
     except:
         pass
 
-    args.log_dir = join(args.data_root_dir,'logs', args.net)
+    args.log_dir = join('logs', args.net)
     try:
         makedirs(args.log_dir)
     except:
@@ -79,7 +80,7 @@ def main(args):
     except:
         pass
 
-    args.output_dir = join(args.data_root_dir, 'plots', args.net)
+    args.output_dir = join( 'plots', args.net)
     try:
         makedirs(args.output_dir)
     except:
@@ -88,6 +89,7 @@ def main(args):
     if args.train:
         from train import train
         # Run training
+        print("TRAIn")
         train(args, train_list, val_list, model_list[0], net_input_shape)
 
     if args.test:
@@ -125,6 +127,8 @@ if __name__ == '__main__':
     parser.add_argument('--loss', type=str.lower, default='w_bce', choices=['bce', 'w_bce', 'dice', 'mar', 'w_mar'],
                         help='Which loss to use. "bce" and "w_bce": unweighted and weighted binary cross entropy'
                              '"dice": soft dice coefficient, "mar" and "w_mar": unweighted and weighted margin loss.')
+    parser.add_argument('--label', type=str, default='RCA', choices=['both', 'RCA', 'LM', 'Aorta'],
+                        help='Which label to use.')
     parser.add_argument('--batch_size', type=int, default=1,
                         help='Batch size for training/testing.')
     parser.add_argument('--initial_lr', type=float, default=0.0001,

@@ -31,14 +31,14 @@ from load_3D_data import load_class_weights, generate_train_batches, generate_va
 
 def get_loss(root, split, net, recon_wei, choice):
     if choice == 'w_bce':
-        pos_class_weight = load_class_weights(root=root, split=split)
+        pos_class_weight = load_class_weights(split=split)
         loss = weighted_binary_crossentropy_loss(pos_class_weight)
     elif choice == 'bce':
         loss = 'binary_crossentropy'
     elif choice == 'dice':
         loss = dice_loss
     elif choice == 'w_mar':
-        pos_class_weight = load_class_weights(root=root, split=split)
+        pos_class_weight = load_class_weights( split=split)
         loss = margin_loss(margin=0.4, downweight=0.5, pos_weight=pos_class_weight)
     elif choice == 'mar':
         loss = margin_loss(margin=0.4, downweight=0.5, pos_weight=1.0)
@@ -135,15 +135,14 @@ def train(args, train_list, val_list, u_model, net_input_shape):
     model = compile_model(args=args, net_input_shape=net_input_shape, uncomp_model=u_model)
     # Set the callbacks
     callbacks = get_callbacks(args)
-
     # Training the network
     history = model.fit_generator(
-        generate_train_batches(args.data_root_dir, train_list, net_input_shape, net=args.net,
+        generate_train_batches(args.label, args.data_root_dir, train_list, net_input_shape, net=args.net,
                                batchSize=args.batch_size, numSlices=args.slices, subSampAmt=args.subsamp,
                                stride=args.stride, shuff=args.shuffle_data, aug_data=args.aug_data),
         max_queue_size=40, workers=4, use_multiprocessing=False,
         steps_per_epoch=10000,
-        validation_data=generate_val_batches(args.data_root_dir, val_list, net_input_shape, net=args.net,
+        validation_data=generate_val_batches(args.label, args.data_root_dir, val_list, net_input_shape, net=args.net,
                                              batchSize=args.batch_size,  numSlices=args.slices, subSampAmt=0,
                                              stride=20, shuff=args.shuffle_data),
         validation_steps=500, # Set validation stride larger to see more of the data.
