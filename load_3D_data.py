@@ -227,8 +227,8 @@ def augmentImages(batch_of_images, batch_of_masks):
             img_and_mask = random_rotation(img_and_mask, rg=45, row_axis=0, col_axis=1, channel_axis=2,
                                            fill_mode='constant', cval=0.)
 
-        if np.random.randint(0, 5) == 3:
-            img_and_mask = elastic_transform(img_and_mask, alpha=1000, sigma=80, alpha_affine=50)
+        """if np.random.randint(0, 5) == 3:
+            img_and_mask = elastic_transform(img_and_mask, alpha=1000, sigma=80, alpha_affine=50)"""
 
         if np.random.randint(0, 10) == 7:
             img_and_mask = random_shift(img_and_mask, wrg=0.2, hrg=0.2, row_axis=0, col_axis=1, channel_axis=2,
@@ -388,7 +388,7 @@ def generate_val_batches(label, root_path, val_list, net_input_shape, net, batch
                     val_img = data['img']
                     val_mask = data['mask']
             except:
-                print('\nPre-made numpy array not found for {}.\nCreating now...'.format(scan_name[:-7]))
+                print('\nPre-made numpy array not found for {}.\nCreating now...'.format(join(root_path,'np_files',basename(scan_name)[:-7]+'.npz')))
                 val_img, val_mask = convert_data_to_numpy(label, scan_name)
                 if np.array_equal(val_img,np.zeros(1)):
                     continue
@@ -447,7 +447,7 @@ def generate_test_batches(label, root_path, test_list, net_input_shape, batchSiz
             with np.load(path_to_np) as data:
                 test_img = data['img']
         except:
-            print('\nPre-made numpy array not found for {}.\nCreating now...'.format(scan_name[:-7]))
+            print('\nPre-made numpy array not found for {}.\nCreating now...'.format(join(root_path,'np_files',basename(scan_name)[:-7]+'.npz')))
             test_img = convert_data_to_numpy(label, scan_name, no_masks=True)
             if np.array_equal(test_img,np.zeros(1)):
                 continue
