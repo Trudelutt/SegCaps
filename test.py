@@ -67,9 +67,9 @@ def test(args, test_list, model_list, net_input_shape):
     if args.weights_path == '':
         weights_path = join(args.check_dir, args.output_name + '_model_' + args.time + '.hdf5')
     else:
-        weights_path = join(args.data_root_dir, args.weights_path)
+        weights_path = join(args.check_dir, args.weights_path)
 
-    output_dir = join(args.data_root_dir, 'results', args.net, 'split_' + str(args.split_num))
+    output_dir = join( 'results', args.net, 'split_' + str(args.split_num))
     raw_out_dir = join(output_dir, 'raw_output')
     fin_out_dir = join(output_dir, 'final_output')
     fig_out_dir = join(output_dir, 'qual_figs')

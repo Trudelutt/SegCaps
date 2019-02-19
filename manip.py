@@ -51,9 +51,9 @@ def manip(args, test_list, model_list, net_input_shape):
     if args.weights_path == '':
         weights_path = join(args.check_dir, args.output_name + '_model_' + args.time + '.hdf5')
     else:
-        weights_path = join(args.data_root_dir, args.weights_path)
+        weights_path = join(args.data_check_dir, args.weights_path)
 
-    output_dir = join(args.data_root_dir, 'results', args.net, 'split_' + str(args.split_num))
+    output_dir = join('results', args.net, 'split_' + str(args.split_num))
     manip_out_dir = join(output_dir, 'manip_output')
     try:
         makedirs(manip_out_dir)
@@ -73,10 +73,10 @@ def manip(args, test_list, model_list, net_input_shape):
     print('Testing... This will take some time...')
 
     for i, img in enumerate(tqdm(test_list)):
-        sitk_img = sitk.ReadImage(join(args.data_root_dir, 'imgs', img[0]))
+        sitk_img = sitk.ReadImage(img[i][0])
         img_data = sitk.GetArrayFromImage(sitk_img)
         num_slices = img_data.shape[0]
-        sitk_mask = sitk.ReadImage(join(args.data_root_dir, 'masks', img[0]))
+        sitk_mask = sitk.ReadImage(img[i][1])
         gt_data = sitk.GetArrayFromImage(sitk_mask)
 
         x, y = img_data[num_slices//2, :, :], gt_data[num_slices//2, :, :]

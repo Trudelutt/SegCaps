@@ -351,7 +351,7 @@ def generate_train_batches(label,root_path, train_list, net_input_shape, net, ba
                         elif img_batch.ndim == 5:
                             plt.imshow(np.squeeze(img_batch[0, :, :, 0, 0]), cmap='gray')
                             plt.imshow(np.squeeze(mask_batch[0, :, :, 0, 0]), alpha=0.15)
-                        plt.savefig(join(root_path, 'logs', 'ex_train.png'), format='png', bbox_inches='tight')
+                        plt.savefig(join( 'logs', 'ex_train.png'), format='png', bbox_inches='tight')
                         plt.close()
                     if net.find('caps') != -1:
                         yield ([img_batch, mask_batch], [mask_batch, mask_batch*img_batch])
@@ -382,13 +382,13 @@ def generate_val_batches(label, root_path, val_list, net_input_shape, net, batch
         for i, scan_name in enumerate(val_list):
             try:
                 scan_name = scan_name[0]
-                path_to_np = join(root_path,'np_files',basename(scan_name)[:-7]+'.npz')
+                path_to_np = join('np_files',basename(scan_name)[:-7]+'.npz')
                 print(path_to_np)
                 with np.load(path_to_np) as data:
                     val_img = data['img']
                     val_mask = data['mask']
             except:
-                print('\nPre-made numpy array not found for {}.\nCreating now...'.format(join(root_path,'np_files',basename(scan_name)[:-7]+'.npz')))
+                print('\nPre-made numpy array not found for {}.\nCreating now...'.format(join('np_files',basename(scan_name)[:-7]+'.npz')))
                 val_img, val_mask = convert_data_to_numpy(label, scan_name)
                 if np.array_equal(val_img,np.zeros(1)):
                     continue
@@ -443,11 +443,11 @@ def generate_test_batches(label, root_path, test_list, net_input_shape, batchSiz
     for i, scan_name in enumerate(test_list):
         try:
             scan_name = scan_name[0]
-            path_to_np = join(root_path,'np_files',basename(scan_name)[:-7]+'.npz')
+            path_to_np = join('np_files',basename(scan_name)[:-7]+'.npz')
             with np.load(path_to_np) as data:
                 test_img = data['img']
         except:
-            print('\nPre-made numpy array not found for {}.\nCreating now...'.format(join(root_path,'np_files',basename(scan_name)[:-7]+'.npz')))
+            print('\nPre-made numpy array not found for {}.\nCreating now...'.format(join('np_files',basename(scan_name)[:-7]+'.npz')))
             test_img = convert_data_to_numpy(label, scan_name, no_masks=True)
             if np.array_equal(test_img,np.zeros(1)):
                 continue
