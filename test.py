@@ -15,7 +15,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 plt.ioff()
 
-from os.path import join
+from os.path import join, basename
 from os import makedirs
 import csv
 import SimpleITK as sitk
@@ -123,14 +123,14 @@ def test(args, test_list, model_list, net_input_shape):
             row.append('Average Symmetric Surface Distance')
 
         writer.writerow(row)
-
         for i, img in enumerate(tqdm(test_list)):
             #TODO this must change
-            sitk_img = sitk.ReadImage(join(args.data_root_dir, 'imgs', img[0]))
+            print(img[0])
+            sitk_img = sitk.ReadImage(img[0].replace(args.label, "CCTA"))
             img_data = sitk.GetArrayFromImage(sitk_img)
             num_slices = img_data.shape[0]
 
-            output_array = eval_model.predict_generator(generate_test_batches(args.data_root_dir, [img],
+            output_array = eval_model.predict_generator(generate_test_batches(args.label, args.data_root_dir, [img],
                                                                               net_input_shape,
                                                                               batchSize=args.batch_size,
                                                                               numSlices=args.slices,
@@ -154,12 +154,12 @@ def test(args, test_list, model_list, net_input_shape):
             output_mask.CopyInformation(sitk_img)
 
             print('Saving Output')
-            sitk.WriteImage(output_img, join(raw_out_dir, img[0][:-7] + '_raw_output' + img[0][-7:]))
-            sitk.WriteImage(output_mask, join(fin_out_dir, img[0][:-7] + '_final_output' + img[0][-7:]))
+            sitk.WriteImage(output_img, join(raw_out_dir, basename(img[0][:-7]) + '_raw_output' + img[0][-7:]))
+            sitk.WriteImage(output_mask, join(fin_out_dir, basename(img[0][:-7]) + '_final_output' + img[0][-7:]))
 
             # Load gt mask
             #TODO change to get correcr mask name
-            sitk_mask = sitk.ReadImage(join(args.data_root_dir, 'masks', img[0]))
+            sitk_mask = sitk.ReadImage(img[0])
             gt_data = sitk.GetArrayFromImage(sitk_mask)
 
             # Plot Qual Figure
@@ -190,7 +190,7 @@ def test(args, test_list, model_list, net_input_shape):
             fig = plt.gcf()
             fig.suptitle(img[0][:-7])
 
-            plt.savefig(join(fig_out_dir, img[0][:-7] + '_qual_fig' + '.png'),
+            plt.savefig(join(fig_out_dir, basename(img[0][:-7]) + '_qual_fig' + '.png'),
                         format='png', bbox_inches='tight')
             plt.close('all')
 
