@@ -10,6 +10,7 @@ This file contains the definitions of custom loss functions not present in the d
 '''
 
 import tensorflow as tf
+from keras import backend as K
 
 def dice_soft(y_true, y_pred, loss_type='sorensen', axis=[1,2,3], smooth=1e-5, from_logits=False):
     """Soft dice (Sørensen or Jaccard) coefficient for comparing the similarity

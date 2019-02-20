@@ -28,7 +28,7 @@ from model_helper import create_model
 def gpu_config():
     config = tf.ConfigProto()
     config.gpu_options.allow_growth=True
-    config.gpu_options.per_process_gpu_memory_fraction = 0.6
+    config.gpu_options.per_process_gpu_memory_fraction = 0.9
     #set_session(tf.Session(config = config))
     sess = tf.Session(config=config)
     sess.run(tf.global_variables_initializer())
@@ -40,11 +40,11 @@ def main(args):
 
     # Load the training, validation, and testing data
     try:
-        train_list, val_list, test_list = load_data( args.split_num)
+        train_list, val_list, test_list = load_data( args.split_num, args.label)
     except:
         # Create the training and test splits if not found
         split_data(args.data_root_dir, args.label, num_splits=4)
-        train_list, val_list, test_list = load_data( args.split_num)
+        train_list, val_list, test_list = load_data( args.split_num, args.label)
 
     # Get image properties from first image. Assume they are all the same.
     #img_shape = sitk.GetArrayFromImage(sitk.ReadImage(join(args.data_root_dir, 'imgs', train_list[0][0]))).shape
@@ -89,7 +89,6 @@ def main(args):
     if args.train:
         from train import train
         # Run training
-        print("TRAIn")
         train(args, train_list, val_list, model_list[0], net_input_shape)
 
     if args.test:
@@ -134,7 +133,7 @@ if __name__ == '__main__':
     parser.add_argument('--initial_lr', type=float, default=0.0001,
                         help='Initial learning rate for Adam.')
                         #default=131.072
-    parser.add_argument('--recon_wei', type=float, default=0,
+    parser.add_argument('--recon_wei', type=float, default=131.072,
                         help="If using capsnet: The coefficient (weighting) for the loss of decoder")
     parser.add_argument('--slices', type=int, default=1,
                         help='Number of slices to include for training/testing.')

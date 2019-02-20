@@ -35,13 +35,13 @@ from custom_data_aug import elastic_transform, salt_pepper_noise
 
 debug = 0
 
-def load_data( split):
+def load_data( split, label):
     # Load the training and testing lists
-    with open(join('split_lists', 'train_split_' + str(split) + '.csv'), 'rb') as f:
+    with open(join('split_lists', 'train_split_' + str(split) + label+ '.csv'), 'rb') as f:
         reader = csv.reader(f)
         training_list = list(reader)
 
-    with open(join( 'split_lists', 'test_split_' + str(split) + '.csv'), 'rb') as f:
+    with open(join( 'split_lists', 'test_split_' + str(split) + label + '.csv'), 'rb') as f:
         reader = csv.reader(f)
         testing_list = list(reader)
 
@@ -99,11 +99,11 @@ def split_data(root_path, label, num_splits=4):
     kf = KFold(n_splits=num_splits)
     n = 0
     for train_index, test_index in kf.split(mask_list):
-        with open(join(outdir,'train_split_' + str(n) + '.csv'), 'wb') as csvfile:
+        with open(join(outdir,'train_split_' + str(n) + label +'.csv'), 'wb') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             for i in train_index:
                 writer.writerow([mask_list[i]])
-        with open(join(outdir,'test_split_' + str(n) + '.csv'), 'wb') as csvfile:
+        with open(join(outdir,'test_split_' + str(n) + label + '.csv'), 'wb') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             for i in test_index:
                 writer.writerow([mask_list[i]])
