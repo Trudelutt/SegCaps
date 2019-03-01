@@ -29,16 +29,16 @@ from custom_losses import dice_hard, weighted_binary_crossentropy_loss, dice_los
 from load_3D_data import load_class_weights, generate_train_batches, generate_val_batches
 
 
-def get_loss(split, net, recon_wei, choice):
+def get_loss(split, net, recon_wei, choice, label):
     if choice == 'w_bce':
-        pos_class_weight = load_class_weights(split=split)
+        pos_class_weight = load_class_weights(split=split, label)
         loss = weighted_binary_crossentropy_loss(pos_class_weight)
     elif choice == 'bce':
         loss = 'binary_crossentropy'
     elif choice == 'dice':
         loss = dice_loss
     elif choice == 'w_mar':
-        pos_class_weight = load_class_weights( split=split)
+        pos_class_weight = load_class_weights( split=split, label)
         loss = margin_loss(margin=0.4, downweight=0.5, pos_weight=pos_class_weight)
     elif choice == 'mar':
         loss = margin_loss(margin=0.4, downweight=0.5, pos_weight=1.0)
@@ -76,7 +76,7 @@ def compile_model(args, net_input_shape, uncomp_model):
         metrics = [dice_hard]
 
     loss, loss_weighting = get_loss( split=args.split_num, net=args.net,
-                                    recon_wei=args.recon_wei, choice=args.loss)
+                                    recon_wei=args.recon_wei, choice=args.loss, label=args.label)
 
     # If using CPU or single GPU
     if args.gpus <= 1:
