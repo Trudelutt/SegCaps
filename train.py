@@ -31,14 +31,14 @@ from load_3D_data import load_class_weights, generate_train_batches, generate_va
 
 def get_loss(split, net, recon_wei, choice, label):
     if choice == 'w_bce':
-        pos_class_weight = load_class_weights(split=split, label)
+        pos_class_weight = load_class_weights(split=split, label=label)
         loss = weighted_binary_crossentropy_loss(pos_class_weight)
     elif choice == 'bce':
         loss = 'binary_crossentropy'
     elif choice == 'dice':
         loss = dice_loss
     elif choice == 'w_mar':
-        pos_class_weight = load_class_weights( split=split, label)
+        pos_class_weight = load_class_weights( split=split, label=label)
         loss = margin_loss(margin=0.4, downweight=0.5, pos_weight=pos_class_weight)
     elif choice == 'mar':
         loss = margin_loss(margin=0.4, downweight=0.5, pos_weight=1.0)
@@ -46,6 +46,7 @@ def get_loss(split, net, recon_wei, choice, label):
         raise Exception("Unknow loss_type")
 
     if net.find('caps') != -1:
+
         return {'out_seg': loss, 'out_recon': 'mse'}, {'out_seg': 1., 'out_recon': recon_wei}
     else:
         return loss, None
@@ -63,7 +64,7 @@ def get_callbacks(arguments):
                                        verbose=1, mode='max')
     lr_reducer = ReduceLROnPlateau(monitor=monitor_name, factor=0.05, cooldown=0, patience=5,verbose=1, mode='max')
     #Code had orginally patience 25
-    early_stopper = EarlyStopping(monitor=monitor_name, min_delta=0, patience=5, verbose=0, mode='max')
+    early_stopper = EarlyStopping(monitor=monitor_name, min_delta=0, patience=12, verbose=0, mode='max')
 
     return [model_checkpoint, csv_logger, lr_reducer, early_stopper, tb]
 
@@ -80,7 +81,7 @@ def compile_model(args, net_input_shape, uncomp_model):
 
     # If using CPU or single GPU
     if args.gpus <= 1:
-        uncomp_model.compile(optimizer=opt, loss=loss, metrics=metrics)
+        uncomp_model.compile(optimizer=opt, loss=loss, loss_weights=loss_weighting, metrics=metrics)
         return uncomp_model
     # If using multiple GPUs
     else:
@@ -141,11 +142,11 @@ def train(args, train_list, val_list, u_model, net_input_shape):
                                batchSize=args.batch_size, numSlices=args.slices, subSampAmt=args.subsamp,
                                stride=args.stride, shuff=args.shuffle_data, aug_data=args.aug_data),
         max_queue_size=40, workers=4, use_multiprocessing=False,
-        steps_per_epoch=10000,
+        steps_per_epoch=np.ceil(200*len(train_list)/args.batch_size),
         validation_data=generate_val_batches(args.label, args.data_root_dir, val_list, net_input_shape, net=args.net,
                                              batchSize=args.batch_size,  numSlices=args.slices, subSampAmt=0,
                                              stride=20, shuff=args.shuffle_data),
-        validation_steps=500, # Set validation stride larger to see more of the data.
+        validation_steps=(200*len(val_list)), # Set validation stride larger to see more of the data.
         epochs=200,
         callbacks=callbacks,
         verbose=1)

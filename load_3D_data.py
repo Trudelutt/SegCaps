@@ -23,6 +23,7 @@ from numpy.random import rand, shuffle
 import SimpleITK as sitk
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
+import pandas as pd
 
 import matplotlib
 matplotlib.use('Agg')
@@ -35,7 +36,7 @@ from custom_data_aug import elastic_transform, salt_pepper_noise
 
 debug = 0
 
-def load_data( split, label):
+"""def load_data( split, label):
     # Load the training and testing lists
     with open(join('split_lists', 'train_split_' + str(split) + label+ '.csv'), 'rb') as f:
         reader = csv.reader(f)
@@ -47,7 +48,7 @@ def load_data( split, label):
 
     new_training_list, validation_list = train_test_split(training_list, test_size=0.1, random_state=7)
 
-    return new_training_list, validation_list, testing_list
+    return new_training_list, validation_list, testing_list"""
 
 def compute_class_weights(train_data_list):
     '''
@@ -86,7 +87,63 @@ def load_class_weights( split, label):
         return value
 
 
-def split_data(root_path, label, num_splits=4):
+def split_data(root_path, label):
+    print("Create split")
+    training_list = fetch_training_data_ca_files(root_path,label)
+    training_val_list, test_list = train_test_split(training_list, test_size=0.1, random_state=7)
+    new_training_list, val_list = train_test_split(training_val_list, test_size=0.1, random_state=7)
+    outdir = label + '_split_lists'
+    try:
+        mkdir(outdir)
+    except:
+        print("Could not create foulder")
+
+    with open(join(outdir,'split_train.csv'), 'w') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for sample in new_training_list:
+            writer.writerow([x for x in sample])
+    with open(join(outdir,'split_val.csv'), 'w') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for sample in val_list:
+            writer.writerow([x for x in sample])
+    with open(join(outdir,'split_test.csv'), 'w') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for sample in test_list:
+            writer.writerow([x for x in sample])
+
+def load_data(label):
+    train, val, test = [], [], []
+    outdir= label+ '_split_lists'
+    train = pd.read_csv(join(outdir,'split_train.csv'), sep=',',header=None).values
+    val = pd.read_csv(join(outdir,'split_val.csv'), sep=',',header=None).values
+    test = pd.read_csv(join(outdir,'split_test.csv'), sep=',',header=None).values
+    print("trainfiles: " + str(len(train)) + ", valfiles: " + str(len(val)) + ", testfiles: " + str(len(test)))
+    return train, val, test
+
+def fetch_training_data_ca_files(data_root_dir,label="LM"):
+    #path = glob("../st.Olav/*/*/*/")
+    #path = glob("../../st.Olav/*/*/*/")
+    if data_root_dir=="../st.Olav":
+        data_root_dir += "/*/*/*/"
+    path = glob(data_root_dir)
+    training_data_files= list()
+    for i in xrange(len(path)):
+        try:
+            data_path = glob(path[i] + "*CCTA.nii.gz")[0]
+            label_path = glob(path[i] + "*" + label + ".nii.gz")[0]
+        except IndexError:
+            if label=="both" and i == 0:
+                print("Makes both labels")
+                make_both_label()
+                label_path = glob(path[i] + "*" + label + ".nii.gz")[0]
+            else:
+                print("out of xrange for %s" %(path[i]))
+        else:
+            training_data_files.append(tuple([data_path, label_path]))
+    return training_data_files
+
+
+"""def split_data(root_path, label, num_splits=4):
     mask_list= glob(join(root_path,"*/*/*/*" + label + ".nii.gz"))
     assert len(mask_list) != 0, 'Unable to find any files in {}'.format(join(root_path,"/*/*/*"+ label))
 
@@ -107,7 +164,7 @@ def split_data(root_path, label, num_splits=4):
             writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             for i in test_index:
                 writer.writerow([mask_list[i]])
-        n += 1
+        n += 1"""
 
 
 def convert_data_to_numpy(label, img_name, no_masks=False, overwrite=False):

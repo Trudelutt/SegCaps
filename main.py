@@ -40,11 +40,11 @@ def main(args):
 
     # Load the training, validation, and testing data
     try:
-        train_list, val_list, test_list = load_data( args.split_num, args.label)
+        train_list, val_list, test_list = load_data(  args.label)
     except:
         # Create the training and test splits if not found
-        split_data(args.data_root_dir, args.label, num_splits=4)
-        train_list, val_list, test_list = load_data( args.split_num, args.label)
+        split_data(args.data_root_dir, args.label)
+        train_list, val_list, test_list = load_data( args.label)
 
     # Get image properties from first image. Assume they are all the same.
     #img_shape = sitk.GetArrayFromImage(sitk.ReadImage(join(args.data_root_dir, 'imgs', train_list[0][0]))).shape
@@ -59,7 +59,8 @@ def main(args):
                        '_shuff-' + str(args.shuffle_data) + '_aug-' + str(args.aug_data) + \
                        '_loss-' + str(args.loss) + '_slic-' + str(args.slices) + \
                        '_sub-' + str(args.subsamp) + '_strid-' + str(args.stride) + \
-                       '_lr-' + str(args.initial_lr) + '_recon-' + str(args.recon_wei)
+                       '_lr-' + str(args.initial_lr) + '_recon-' + str(args.recon_wei) + \
+                       '_label' + str(args.label)
     args.time = time
 
     args.check_dir = join('saved_models', args.net)

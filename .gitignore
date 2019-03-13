@@ -8,5 +8,6 @@
 figs/
 logs/
 np_files/
-split_lists/
+*split_lists/
 plots/
+results/
