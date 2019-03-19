@@ -62,7 +62,7 @@ def compute_class_weights(train_data_list):
     pos = 0.0
     neg = 0.0
     for img_name in tqdm(train_data_list):
-        img = sitk.GetArrayFromImage(sitk.ReadImage(img_name[0]))
+        img = sitk.GetArrayFromImage(sitk.ReadImage(img_name[1]))
         for slic in img:
             if not np.any(slic):
                 continue
@@ -80,7 +80,7 @@ def load_class_weights( split, label):
     except:
         print('Class weight file {} not found.\nComputing class weights now. This may take '
               'some time.'.format(class_weight_filename))
-        train_data_list, _, _ = load_data(str(split), label)
+        train_data_list, _, _ = load_data(label)
         value = compute_class_weights(train_data_list)
         np.save(class_weight_filename,value)
         print('Finished computing class weights. This value has been saved for this training split.')
@@ -171,8 +171,8 @@ def convert_data_to_numpy(label, img_name, no_masks=False, overwrite=False):
     print("Converting numpy")
     fname = basename(img_name[:-7])
     numpy_path = 'np_files'
-    img_path = img_name.replace(label, "CCTA")
-    #mask_path = join(root_path, 'masks')
+    img_path = img_name.replace(label,"CCTA")
+    mask_path = img_name
     fig_path = 'figs'
     try:
         mkdir(numpy_path)
@@ -206,7 +206,7 @@ def convert_data_to_numpy(label, img_name, no_masks=False, overwrite=False):
         img /= (ct_max + -ct_min)
 
         if not no_masks:
-            itk_mask = sitk.ReadImage(img_name)
+            itk_mask = sitk.ReadImage(mask_path)
             mask = sitk.GetArrayFromImage(itk_mask)
             mask = np.rollaxis(mask, 0, 3)
             mask[mask > 250] = 1 # In case using 255 instead of 1
@@ -360,7 +360,7 @@ def generate_train_batches(label,root_path, train_list, net_input_shape, net, ba
         count = 0
         for i, scan_name in enumerate(train_list):
             try:
-                scan_name = scan_name[0]
+                scan_name = scan_name[1]
                 path_to_np = join('np_files',basename(scan_name)[:-7]+'.npz')
                 with np.load(path_to_np) as data:
                     train_img = data['img']
@@ -438,7 +438,7 @@ def generate_val_batches(label, root_path, val_list, net_input_shape, net, batch
         count = 0
         for i, scan_name in enumerate(val_list):
             try:
-                scan_name = scan_name[0]
+                scan_name = scan_name[1]
                 path_to_np = join('np_files',basename(scan_name)[:-7]+'.npz')
                 print(path_to_np)
                 with np.load(path_to_np) as data:
@@ -499,7 +499,7 @@ def generate_test_batches(label, root_path, test_list, net_input_shape, batchSiz
     count = 0
     for i, scan_name in enumerate(test_list):
         try:
-            scan_name = scan_name[0]
+            scan_name = scan_name[1]
             path_to_np = join('np_files',basename(scan_name)[:-7]+'.npz')
             with np.load(path_to_np) as data:
                 test_img = data['img']

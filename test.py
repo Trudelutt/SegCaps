@@ -62,6 +62,18 @@ def threshold_mask(raw_output, threshold):
 
     return thresholded_mask
 
+def create_and_write_viz_nii(name, meta_sitk, pred, gt):
+    print("Write viz nii file...")
+    print(np.unique(pred))
+    pred[pred > 0.] = 2.
+    print(np.unique(pred))
+    print(np.unique(gt))
+    vis_image = gt + pred
+    print(np.unique(vis_image))
+    viz_sitk = sitk.GetImageFromArray(vis_image)
+    viz_sitk.CopyInformation(meta_sitk)
+    sitk.WriteImage(viz_sitk, name)
+    print("Done write viz nii file...")
 
 def test(args, test_list, model_list, net_input_shape):
     if args.weights_path == '':
@@ -126,7 +138,7 @@ def test(args, test_list, model_list, net_input_shape):
         for i, img in enumerate(tqdm(test_list)):
             #TODO this must change
             print(img[0])
-            sitk_img = sitk.ReadImage(img[0].replace(args.label, "CCTA"))
+            sitk_img = sitk.ReadImage(img[0])
             img_data = sitk.GetArrayFromImage(sitk_img)
             num_slices = img_data.shape[0]
 
@@ -154,13 +166,14 @@ def test(args, test_list, model_list, net_input_shape):
             output_mask.CopyInformation(sitk_img)
 
             print('Saving Output')
-            sitk.WriteImage(output_img, join(raw_out_dir, basename(img[0][:-7]) + '_raw_output' + img[0][-7:]))
-            sitk.WriteImage(output_mask, join(fin_out_dir, basename(img[0][:-7]) + '_final_output' + img[0][-7:]))
+            sitk.WriteImage(output_img, join(raw_out_dir, basename(img[1][:-7]) + '_raw_output' + img[1][-7:]))
+            sitk.WriteImage(output_mask, join(fin_out_dir, basename(img[1][:-7]) + '_final_output' + img[1][-7:]))
 
             # Load gt mask
             #TODO change to get correcr mask name
-            sitk_mask = sitk.ReadImage(img[0])
+            sitk_mask = sitk.ReadImage(img[1])
             gt_data = sitk.GetArrayFromImage(sitk_mask)
+            create_and_write_viz_nii(join(raw_out_dir, basename(img[1][:-7]) + '_raw_output_viz' + img[1][-7:]), sitk_img, output_bin, gt_data)
 
             # Plot Qual Figure
             print('Creating Qualitative Figure for Quick Reference')
@@ -190,7 +203,7 @@ def test(args, test_list, model_list, net_input_shape):
             fig = plt.gcf()
             fig.suptitle(img[0][:-7])
 
-            plt.savefig(join(fig_out_dir, basename(img[0][:-7]) + '_qual_fig' + '.png'),
+            plt.savefig(join(fig_out_dir, basename(img[1][:-7]) + '_qual_fig' + '.png'),
                         format='png', bbox_inches='tight')
             plt.close('all')
 
