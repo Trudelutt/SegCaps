@@ -64,12 +64,8 @@ def threshold_mask(raw_output, threshold):
 
 def create_and_write_viz_nii(name, meta_sitk, pred, gt):
     print("Write viz nii file...")
-    print(np.unique(pred))
     pred[pred > 0.] = 2.
-    print(np.unique(pred))
-    print(np.unique(gt))
     vis_image = gt + pred
-    print(np.unique(vis_image))
     viz_sitk = sitk.GetImageFromArray(vis_image)
     viz_sitk.CopyInformation(meta_sitk)
     sitk.WriteImage(viz_sitk, name)
@@ -79,9 +75,9 @@ def test(args, test_list, model_list, net_input_shape):
     if args.weights_path == '':
         weights_path = join(args.check_dir, args.output_name + '_model_' + args.time + '.hdf5')
     else:
-        weights_path = join(args.check_dir, args.weights_path)
+        weights_path = join(args.check_dir, args.weights_path.replace("saved_models/", ""))
 
-    output_dir = join( 'results', args.net, 'split_' + str(args.split_num))
+    output_dir = join( 'results', weights_path)
     raw_out_dir = join(output_dir, 'raw_output')
     fin_out_dir = join(output_dir, 'final_output')
     fig_out_dir = join(output_dir, 'qual_figs')

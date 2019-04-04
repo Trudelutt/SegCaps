@@ -118,11 +118,11 @@ if __name__ == '__main__':
                         help='Set to 1 to enable training.')
     parser.add_argument('--test', type=int, default=1, choices=[0,1],
                         help='Set to 1 to enable testing.')
-    parser.add_argument('--manip', type=int, default=1, choices=[0,1],
+    parser.add_argument('--manip', type=int, default=0, choices=[0,1],
                         help='Set to 1 to enable manipulation.')
     parser.add_argument('--shuffle_data', type=int, default=1, choices=[0,1],
                         help='Whether or not to shuffle the training data (both per epoch and in slice order.')
-    parser.add_argument('--aug_data', type=int, default=1, choices=[0,1],
+    parser.add_argument('--aug_data', type=int, default=0, choices=[0,1],
                         help='Whether or not to use data augmentation during training.')
     parser.add_argument('--loss', type=str.lower, default='w_bce', choices=['bce', 'w_bce', 'dice', 'mar', 'w_mar'],
                         help='Which loss to use. "bce" and "w_bce": unweighted and weighted binary cross entropy'

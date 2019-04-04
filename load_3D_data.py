@@ -74,7 +74,7 @@ def compute_class_weights(train_data_list):
     return neg/pos
 
 def load_class_weights( split, label):
-    class_weight_filename = join( 'split_lists', 'train_split_' + str(split) + '_class_weights.npy')
+    class_weight_filename = join( label+'_split_lists', 'train_split_class_weights.npy')
     try:
         return np.load(class_weight_filename)
     except:
