@@ -97,7 +97,7 @@ def dice_hard(y_true, y_pred, threshold=0.5, axis=[1,2,3], smooth=1):
     -----------
     - `Wiki-Dice <https://en.wikipedia.org/wiki/Sørensen–Dice_coefficient>`_
     """
-    y_pred = tf.cast(y_pred > threshold, dtype=tf.float32)
+    """y_pred = tf.cast(y_pred > threshold, dtype=tf.float32)
     y_true = tf.cast(y_true > threshold, dtype=tf.float32)
     inse = tf.reduce_sum(tf.multiply(y_pred, y_true), axis=axis)
     l = tf.reduce_sum(y_pred, axis=axis)
@@ -110,11 +110,11 @@ def dice_hard(y_true, y_pred, threshold=0.5, axis=[1,2,3], smooth=1):
     hard_dice = (2. * inse + smooth) / (l + r + smooth)
     ##
     hard_dice = tf.reduce_mean(hard_dice)
-    return hard_dice
-    """y_true_f = K.flatten(y_true)
+    return hard_dice"""
+    y_true_f = K.flatten(y_true)
     y_pred_f = K.flatten(y_pred)
     intersection = K.sum(y_true_f * y_pred_f)
-    return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)"""
+    return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
 
 
 def dice_loss(y_true, y_pred, from_logits=False):
