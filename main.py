@@ -37,14 +37,15 @@ def main(args):
     #gpu_config()
     # Ensure training, testing, and manip are not all turned off
     assert (args.train or args.test or args.manip), 'Cannot have train, test, and manip all set to 0, Nothing to do.'
+    assert(args.split_nr < args.splits), 'Splits needs to be greater than split number'
 
     # Load the training, validation, and testing data
     try:
-        train_list, val_list, test_list = load_data(  args.label)
+        train_list, val_list, test_list = load_data(  args.label, args.split_nr)
     except:
         # Create the training and test splits if not found
-        split_data(args.data_root_dir, args.label)
-        train_list, val_list, test_list = load_data( args.label)
+        split_data(args.data_root_dir, args.label, args.splits)
+        train_list, val_list, test_list = load_data( args.label,args.split_nr)
 
     # Get image properties from first image. Assume they are all the same.
     #img_shape = sitk.GetArrayFromImage(sitk.ReadImage(join(args.data_root_dir, 'imgs', train_list[0][0]))).shape
@@ -129,6 +130,10 @@ if __name__ == '__main__':
                              '"dice": soft dice coefficient, "mar" and "w_mar": unweighted and weighted margin loss.')
     parser.add_argument('--label', type=str, default='RCA', choices=['both', 'RCA', 'LM', 'Aorta'],
                         help='Which label to use.')
+    parser.add_argument('--splits', type=int, default=4,
+                    help='Number of different datasplits.')
+    parser.add_argument('--split_nr', type=int, default=0,
+                        help='Given split to train/test')
     parser.add_argument('--batch_size', type=int, default=1,
                         help='Batch size for training/testing.')
     parser.add_argument('--initial_lr', type=float, default=0.0001,

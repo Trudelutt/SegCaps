@@ -87,36 +87,45 @@ def load_class_weights( split, label):
         return value
 
 
-def split_data(root_path, label):
+def split_data(root_path, label, splits=4):
     print("Create split")
-    training_list = fetch_training_data_ca_files(root_path,label)
-    training_val_list, test_list = train_test_split(training_list, test_size=0.1, random_state=7)
-    new_training_list, val_list = train_test_split(training_val_list, test_size=0.1, random_state=7)
-    outdir = label + '_split_lists'
+    outdir= "split_lists"
     try:
         mkdir(outdir)
     except:
-        print("Could not create foulder")
+        pass
+    for i in range(splits):
+        training_list = fetch_training_data_ca_files(data_root_dir,label)
+        training_val_list, test_list = train_test_split(training_list, test_size=0.1, random_state=i)
+        #TODO change name
+        new_training_list, val_list = train_test_split(training_val_list, test_size=0.1, random_state=i)
+        print("trainfiles: " + str(len(new_training_list)) + " val: " + str(len(val_list)) + " test: " + str(len(test_list)))
+        split_dir = join(outdir,label +'_' + str(i) + '_split_lists')
+        try:
+            mkdir(split_dir)
+        except:
+            print("Could not create foulder")
 
-    with open(join(outdir,'split_train.csv'), 'w') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        for sample in new_training_list:
-            writer.writerow([x for x in sample])
-    with open(join(outdir,'split_val.csv'), 'w') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        for sample in val_list:
-            writer.writerow([x for x in sample])
-    with open(join(outdir,'split_test.csv'), 'w') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        for sample in test_list:
-            writer.writerow([x for x in sample])
+        with open(join(split_dir,'split_train.csv'), 'w') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            for sample in new_training_list:
+                writer.writerow([x for x in sample])
+        with open(join(split_dir,'split_val.csv'), 'w') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            for sample in val_list:
+                writer.writerow([x for x in sample])
+        with open(join(split_dir,'split_test.csv'), 'w') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            for sample in test_list:
+                writer.writerow([x for x in sample])
 
-def load_data(label):
+def load_data(label, split_nr=0):
     train, val, test = [], [], []
-    outdir= label+ '_split_lists'
-    train = pd.read_csv(join(outdir,'split_train.csv'), sep=',',header=None).values
-    val = pd.read_csv(join(outdir,'split_val.csv'), sep=',',header=None).values
-    test = pd.read_csv(join(outdir,'split_test.csv'), sep=',',header=None).values
+    given_split_dir= join("split_lists", label + "_"+str(split_nr) + "_split_lists")
+    print(given_split_dir)
+    train = pd.read_csv(join(given_split_dir,'split_train.csv'), sep=',',header=None).values
+    val = pd.read_csv(join(given_split_dir,'split_val.csv'), sep=',',header=None).values
+    test = pd.read_csv(join(given_split_dir,'split_test.csv'), sep=',',header=None).values
     print("trainfiles: " + str(len(train)) + ", valfiles: " + str(len(val)) + ", testfiles: " + str(len(test)))
     return train, val, test
 
