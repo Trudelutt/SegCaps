@@ -592,22 +592,22 @@ def generate_test_batches(args, label, root_path, test_list, net_input_shape, ba
                 print('Error this function currently only supports 2D and 3D data.')
                 exit(0)
 
-        """if numSlices == 1:
-            subSampAmt = 0
-        elif subSampAmt == -1 and numSlices > 1:
-            np.random.seed(None)
-            subSampAmt = int(rand(1)*(test_img.shape[2]*0.05))
+            """if numSlices == 1:
+                subSampAmt = 0
+            elif subSampAmt == -1 and numSlices > 1:
+                np.random.seed(None)
+                subSampAmt = int(rand(1)*(test_img.shape[2]*0.05))
 
-        indicies = np.arange(0, test_img.shape[2] - numSlices * (subSampAmt + 1) + 1, stride)
-        for j in indicies:
-            if img_batch.ndim == 4:
-                img_batch[count, :, :, :] = test_img[:, :, j:j + numSlices * (subSampAmt+1):subSampAmt+1]
-            elif img_batch.ndim == 5:
-                # Assumes img and mask are single channel. Replace 0 with : if multi-channel.
-                img_batch[count, :, :, :, 0] = test_img[:, :, j:j + numSlices * (subSampAmt+1):subSampAmt+1]
-            else:
-                print('Error this function currently only supports 2D and 3D data.')
-                exit(0)"""
+            indicies = np.arange(0, test_img.shape[2] - numSlices * (subSampAmt + 1) + 1, stride)
+            for j in indicies:
+                if img_batch.ndim == 4:
+                    img_batch[count, :, :, :] = test_img[:, :, j:j + numSlices * (subSampAmt+1):subSampAmt+1]
+                elif img_batch.ndim == 5:
+                    # Assumes img and mask are single channel. Replace 0 with : if multi-channel.
+                    img_batch[count, :, :, :, 0] = test_img[:, :, j:j + numSlices * (subSampAmt+1):subSampAmt+1]
+                else:
+                    print('Error this function currently only supports 2D and 3D data.')
+                    exit(0)"""
 
             count += 1
             if count % batchSize == 0:
