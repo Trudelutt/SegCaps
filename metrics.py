@@ -13,7 +13,7 @@ from scipy.stats import pearsonr
 
 
 def dc(result, reference):
-    r"""
+    """
     Dice coefficient
 
     Computes the Dice coefficient (also known as Sorensen index) between the binary
@@ -46,7 +46,7 @@ def dc(result, reference):
     -----
     This is a real metric. The binary images can therefore be supplied in any order.
     """
-    """result = np.atleast_1d(result.astype(np.bool))
+    result = np.atleast_1d(result.astype(np.bool))
     reference = np.atleast_1d(reference.astype(np.bool))
 
     intersection = np.count_nonzero(result & reference)
@@ -59,11 +59,11 @@ def dc(result, reference):
     except ZeroDivisionError:
         dc = 0.0
 
-    return dc"""
-    y_true_f = K.flatten(y_true)
+    return dc
+    """y_true_f = K.flatten(y_true)
     y_pred_f = K.flatten(y_pred)
     intersection = K.sum(y_true_f * y_pred_f)
-    return K.eval(2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+    return K.eval(2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)"""
 
 
 def jc(result, reference):
