@@ -16,6 +16,10 @@ def create_model(args, input_shape):
             from unet import UNet
             model = UNet(input_shape)
             return [model]
+        elif args.net == 'bvnet':
+            from BVNet import BVNet
+            model = BVNet(input_shape)
+            return [model]
         elif args.net == 'tiramisu':
             from densenets import DenseNetFCN
             model = DenseNetFCN(input_shape)

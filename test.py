@@ -138,7 +138,7 @@ def test(args, test_list, model_list, net_input_shape):
             img_data = sitk.GetArrayFromImage(sitk_img)
             num_slices = img_data.shape[0]
 
-            output_array = eval_model.predict_generator(generate_test_batches(args.label, args.data_root_dir, [img],
+            output_array = eval_model.predict_generator(args, generate_test_batches(args.label, args.data_root_dir, [img],
                                                                               net_input_shape,
                                                                               batchSize=args.batch_size,
                                                                               numSlices=args.slices,

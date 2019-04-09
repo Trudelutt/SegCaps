@@ -50,7 +50,7 @@ def main(args):
     # Get image properties from first image. Assume they are all the same.
     #img_shape = sitk.GetArrayFromImage(sitk.ReadImage(join(args.data_root_dir, 'imgs', train_list[0][0]))).shape
     img_shape = sitk.GetArrayFromImage(sitk.ReadImage(train_list[0][0].replace(args.label, "CCTA"))).shape
-    net_input_shape = (img_shape[1], img_shape[2], args.slices)
+    net_input_shape = (img_shape[1], img_shape[2], args.channels)
 
     # Create the model for training/testing/manipulation
     model_list = create_model(args=args, input_shape=net_input_shape)
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     parser.add_argument('--split_num', type=int, default=0,
                         help='Which training split to train/test on.')
     parser.add_argument('--net', type=str.lower, default='segcapsr3',
-                        choices=['segcapsr3', 'segcapsr1', 'segcapsbasic', 'unet', 'tiramisu'],
+                        choices=['segcapsr3', 'segcapsr1', 'segcapsbasic', 'unet','bvnet', 'tiramisu', 'bvnet3d'],
                         help='Choose your network.')
     parser.add_argument('--train', type=int, default=1, choices=[0,1],
                         help='Set to 1 to enable training.')
@@ -121,6 +121,10 @@ if __name__ == '__main__':
                         help='Set to 1 to enable testing.')
     parser.add_argument('--manip', type=int, default=0, choices=[0,1],
                         help='Set to 1 to enable manipulation.')
+    parser.add_argument('--frangi_mode', type=str, default=None, choices=[None,'frangi_input', 'frangi_comb', 'frangi_mask'],
+                        help='Set the Frangi filter as input.')
+    parser.add_argument('--channels', type=int, default=5,
+                        help='Number of channels to take in the model.')
     parser.add_argument('--shuffle_data', type=int, default=1, choices=[0,1],
                         help='Whether or not to shuffle the training data (both per epoch and in slice order.')
     parser.add_argument('--aug_data', type=int, default=0, choices=[0,1],
