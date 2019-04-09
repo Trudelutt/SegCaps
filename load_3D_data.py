@@ -213,7 +213,7 @@ def fetch_training_data_ca_files(data_root_dir,label="LM"):
         n += 1"""
 
 
-def convert_data_to_numpy(args, label, img_name, no_masks=False, overwrite=False,train=False):
+def convert_data_to_numpy(args, label, img_name, np_subfolder_path, no_masks=False, overwrite=False,train=False):
     print("Converting numpy")
     fname = basename(img_name[:-7])
     numpy_path = 'np_files'
@@ -225,7 +225,7 @@ def convert_data_to_numpy(args, label, img_name, no_masks=False, overwrite=False
     except:
         pass
     try:
-        mkdir(fig_path)
+        mkdir(join(numpy_path, np_subfolder_path))
     except:
         pass
 
@@ -234,11 +234,11 @@ def convert_data_to_numpy(args, label, img_name, no_masks=False, overwrite=False
 
     if not overwrite:
         try:
-            with np.load(join(numpy_path, fname + '.npz')) as data:
+            with np.load(join(numpy_path, np_subfolder_path, fname + '.npz')) as data:
                 return data['img'], data['mask']
         except:
             print("Something went wrong")
-            print(join(numpy_path, fname + '.npz'))
+            print(join(numpy_path, np_subfolder_path, fname + '.npz'))
             pass
 
     try:
@@ -287,9 +287,9 @@ def convert_data_to_numpy(args, label, img_name, no_masks=False, overwrite=False
             print('-'*100+'\n')
 """
         if not no_masks:
-            np.savez_compressed(join(numpy_path, fname + '.npz'), img=img, mask=mask)
+            np.savez_compressed(join(numpy_path, np_subfolder_path, fname + '.npz'), img=img, mask=mask)
         else:
-            np.savez_compressed(join(numpy_path, fname + '.npz'), img=img)
+            np.savez_compressed(join(numpy_path, np_subfolder_path, fname + '.npz'), img=img)
 
         if not no_masks:
             return img, mask
@@ -392,6 +392,13 @@ def generate_train_batches(args, label,root_path, train_list, net_input_shape, n
     # Create placeholders for training
     img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.float32)
     mask_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.uint8)
+    numpy_subfolder_path =  args.net + "_channels" + str(args.channels) + "_stride" + str(args.stride)
+    if args.frangi_mode== 'frangi_input':
+        numpy_subfolder_path += "_Frangi_input"
+    elif args.frangi_mode == 'frangi_comb':
+        numpy_subfolder_path += '_Frangi_comb'
+    elif args.frangi_mode == 'frangi_mask':
+        numpy_subfolder_path += '_Frangi_mask'
 
     while True:
         if shuff:
@@ -400,30 +407,30 @@ def generate_train_batches(args, label,root_path, train_list, net_input_shape, n
         for i, scan_name in enumerate(train_list):
             try:
                 scan_name = scan_name[1]
-                path_to_np = join('np_files',basename(scan_name)[:-7]+'.npz')
+                path_to_np = join('np_files', numpy_subfolder_path, basename(scan_name)[:-7]+'.npz')
                 with np.load(path_to_np) as data:
                     train_img = data['img']
                     train_mask = data['mask']
             except:
-                print('\nPre-made numpy array not found for {}.\nCreating now...'.format(join('np_files',basename(scan_name)[:-7]+'.npz')))
-                train_img, train_mask = convert_data_to_numpy(args, label, scan_name, train=True)
+                print('\nPre-made numpy array not found for {}.\nCreating now...'.format(path_to_np))
+                train_img, train_mask = convert_data_to_numpy(args, label, scan_name, numpy_subfolder_path, train=True)
                 if np.array_equal(train_img,np.zeros(1)):
                     continue
                 else:
                     print('\nFinished making npz file.')
-            if numSlices == 1:
+            """if numSlices == 1:
                 subSampAmt = 0
             elif subSampAmt == -1 and numSlices > 1:
                 np.random.seed(None)
-                subSampAmt = int(rand(1)*(train_img.shape[2]*0.05))
+                subSampAmt = int(rand(1)*(train_img.shape[2]*0.05))"""
 
             indicies = np.arange(0, train_img.shape[0])
             if shuff:
                 shuffle(indicies)
 
             for j in indicies:
-                if not np.any(train_mask[:, :, j:j + numSlices * (subSampAmt+1):subSampAmt+1]):
-                    continue
+                #if not np.any(train_mask[:, :, j:j + numSlices * (subSampAmt+1):subSampAmt+1]):
+                    #continue
                 if img_batch.ndim == 4:
                     #print("train", train_img.shape)
                     img_batch[count, ...] = train_img[j:j+1,...]
@@ -476,6 +483,13 @@ def generate_val_batches(args, label, root_path, val_list, net_input_shape, net,
     # Create placeholders for validation
     img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.float32)
     mask_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.uint8)
+    numpy_subfolder_path =  args.net + "_channels" + str(args.channels) + "_stride" + str(args.stride)
+    if args.frangi_mode== 'frangi_input':
+        numpy_subfolder_path += "_Frangi_input"
+    elif args.frangi_mode == 'frangi_comb':
+        numpy_subfolder_path += '_Frangi_comb'
+    elif args.frangi_mode == 'frangi_mask':
+        numpy_subfolder_path += '_Frangi_mask'
 
     while True:
         if shuff:
@@ -484,14 +498,14 @@ def generate_val_batches(args, label, root_path, val_list, net_input_shape, net,
         for i, scan_name in enumerate(val_list):
             try:
                 scan_name = scan_name[1]
-                path_to_np = join('np_files',basename(scan_name)[:-7]+'.npz')
+                path_to_np = join('np_files', numpy_path, basename(scan_name)[:-7]+'.npz')
                 print(path_to_np)
                 with np.load(path_to_np) as data:
                     val_img = data['img']
                     val_mask = data['mask']
             except:
-                print('\nPre-made numpy array not found for {}.\nCreating now...'.format(join('np_files',basename(scan_name)[:-7]+'.npz')))
-                val_img, val_mask = convert_data_to_numpy(label, scan_name)
+                print('\nPre-made numpy array not found for {}.\nCreating now...'.format(path_to_np))
+                val_img, val_mask = convert_data_to_numpy(label, scan_name, numpy_subfolder_path)
                 if np.array_equal(val_img,np.zeros(1)):
                     continue
                 else:
@@ -559,16 +573,23 @@ def generate_test_batches(args, label, root_path, test_list, net_input_shape, ba
                           stride=1, downSampAmt=1):
     # Create placeholders for testing
     img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.float32)
+    numpy_subfolder_path = args.net + "_channels" + str(args.channels) + "_stride" + str(args.stride)
+    if args.frangi_mode== 'frangi_input':
+        numpy_subfolder_path += "_Frangi_input"
+    elif args.frangi_mode == 'frangi_comb':
+        numpy_subfolder_path += '_Frangi_comb'
+    elif args.frangi_mode == 'frangi_mask':
+        numpy_subfolder_path += '_Frangi_mask'
     count = 0
     for i, scan_name in enumerate(test_list):
         try:
             scan_name = scan_name[1]
-            path_to_np = join('np_files',basename(scan_name)[:-7]+'.npz')
+            path_to_np = join('np_files', numpy_path, basename(scan_name)[:-7]+'.npz')
             with np.load(path_to_np) as data:
                 test_img = data['img']
         except:
-            print('\nPre-made numpy array not found for {}.\nCreating now...'.format(join('np_files',basename(scan_name)[:-7]+'.npz')))
-            test_img = convert_data_to_numpy(label, scan_name, no_masks=True)
+            print('\nPre-made numpy array not found for {}.\nCreating now...'.format(path_to_np))
+            test_img = convert_data_to_numpy(label, scan_name, numpy_subfolder_path, no_masks=True)
             if np.array_equal(test_img,np.zeros(1)):
                 continue
             else:
