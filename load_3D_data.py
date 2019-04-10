@@ -70,7 +70,12 @@ def get_comb_samples(args, img_path, mask_path, train):
     channel_for_each_input = args.channels/2
     img, mask = get_preprossesed_samples_from_file(img_path, mask_path, train, args.net, args.label, channel_for_each_input,args.stride)
     frangi, _mask = get_preprossesed_samples_from_file(img_path.replace('CCTA', 'CCTA_Frangi'), mask_path, train, args.net, args.label, channel_for_each_input,args.stride)
-    return np.concatenate((img, frangi), axis=3), mask
+    if img.ndim ==4:
+        return np.concatenate((img, frangi), axis=3), mask
+    elif img.ndim == 5:
+        return np.concatenate((img, frangi), axis=4), mask
+    else:
+        print("Not implemented for this dim")
 
 
 """def load_data( split, label):
