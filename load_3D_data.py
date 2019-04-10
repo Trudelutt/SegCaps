@@ -498,7 +498,7 @@ def generate_val_batches(args, label, root_path, val_list, net_input_shape, net,
         for i, scan_name in enumerate(val_list):
             try:
                 scan_name = scan_name[1]
-                path_to_np = join('np_files', numpy_path, basename(scan_name)[:-7]+'.npz')
+                path_to_np = join('np_files', numpy_subfolder_path, basename(scan_name)[:-7]+'.npz')
                 print(path_to_np)
                 with np.load(path_to_np) as data:
                     val_img = data['img']
@@ -584,7 +584,7 @@ def generate_test_batches(args, label, root_path, test_list, net_input_shape, ba
     for i, scan_name in enumerate(test_list):
         try:
             scan_name = scan_name[1]
-            path_to_np = join('np_files', numpy_path, basename(scan_name)[:-7]+'.npz')
+            path_to_np = join('np_files', numpy_subfolder_path, basename(scan_name)[:-7]+'.npz')
             with np.load(path_to_np) as data:
                 test_img = data['img']
         except:
