@@ -51,7 +51,8 @@ def main(args):
     #img_shape = sitk.GetArrayFromImage(sitk.ReadImage(join(args.data_root_dir, 'imgs', train_list[0][0]))).shape
     img_shape = sitk.GetArrayFromImage(sitk.ReadImage(train_list[0][0].replace(args.label, "CCTA"))).shape
     net_input_shape = (img_shape[1], img_shape[2], args.channels)
-
+    if args.net == 'bvnet3d':
+        net_input_shape = (64,64,64, args.channels)
     # Create the model for training/testing/manipulation
     model_list = create_model(args=args, input_shape=net_input_shape)
     print_summary(model=model_list[0], positions=[.38, .65, .75, 1.])

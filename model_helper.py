@@ -20,6 +20,10 @@ def create_model(args, input_shape):
             from BVNet import BVNet
             model = BVNet(input_shape)
             return [model]
+        elif args.net == 'bvnet3d':
+            from BVNet3D import BVNet3D
+            model = BVNet3D(input_shape)
+            return [model]
         elif args.net == 'tiramisu':
             from densenets import DenseNetFCN
             model = DenseNetFCN(input_shape)
