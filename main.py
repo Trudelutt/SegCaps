@@ -59,8 +59,8 @@ def main(args):
 
     args.output_name = 'split-' + str(args.split_num) + '_batch-' + str(args.batch_size) + \
                        '_shuff-' + str(args.shuffle_data) + '_aug-' + str(args.aug_data) + \
-                       '_loss-' + str(args.loss) + '_slic-' + str(args.slices) + \
-                       '_sub-' + str(args.subsamp) + '_strid-' + str(args.stride) + \
+                       '_loss-' + str(args.loss) + '_channels-' + str(args.channels) + \
+                       '_frangi_mode-' + str(args.frangi_mode) + '_strid-' + str(args.stride) + \
                        '_lr-' + str(args.initial_lr) + '_recon-' + str(args.recon_wei) + \
                        '_label' + str(args.label)
     args.time = time

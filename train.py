@@ -144,9 +144,9 @@ def train(args, train_list, val_list, u_model, net_input_shape):
         max_queue_size=40, workers=4, use_multiprocessing=False,
         steps_per_epoch=np.ceil(200*len(train_list)/args.batch_size),
         validation_data=generate_val_batches(args, args.label, args.data_root_dir, val_list, net_input_shape, net=args.net,
-                                             batchSize=args.batch_size,  numSlices=args.slices, subSampAmt=0,
+                                             batchSize=1,  numSlices=args.slices, subSampAmt=0,
                                              stride=20, shuff=args.shuffle_data),
-        validation_steps=(200*len(val_list)), # Set validation stride larger to see more of the data.
+        validation_steps=(300*len(val_list)), # Set validation stride larger to see more of the data.
         epochs=500,
         callbacks=callbacks,
         verbose=1)

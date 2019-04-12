@@ -576,7 +576,7 @@ def generate_val_batches(args, label, root_path, val_list, net_input_shape, net,
 
 @threadsafe_generator
 def generate_test_batches(args, label, root_path, test_list, net_input_shape, batchSize=1, numSlices=1, subSampAmt=0,
-                          stride=1, downSampAmt=1):
+                          stride=1, downSampAmt=1, shuff=0):
     # Create placeholders for testing
     img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.float32)
     numpy_subfolder_path = args.net + "_channels" + str(args.channels) + "_stride" + str(args.stride)
@@ -610,11 +610,11 @@ def generate_test_batches(args, label, root_path, test_list, net_input_shape, ba
             if img_batch.ndim == 4:
                 #print("train", train_img.shape)
                 img_batch[count, ...] = test_img[j:j+1,...]
-                mask_batch[count, :, :, :] = test_mask[j:j+1,...]
+               # mask_batch[count, :, :, :] = test_mask[j:j+1,...]
             elif img_batch.ndim == 5:
                 # Assumes img and mask are single channel. Replace 0 with : if multi-channel.
                 img_batch[count, :, :, :, :] = test_img[j:j+1, ...]
-                mask_batch[count, :, :, :, :] = test_mask[j:j+1,...]
+               # mask_batch[count, :, :, :, :] = test_mask[j:j+1,...]
             else:
                 print('Error this function currently only supports 2D and 3D data.')
                 exit(0)
