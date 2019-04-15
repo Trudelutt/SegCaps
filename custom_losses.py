@@ -44,7 +44,7 @@ def dice_soft(y_true, y_pred, loss_type='sorensen', axis=[1,2,3], smooth=1., fro
     - `Wiki-Dice <https://en.wikipedia.org/wiki/Sørensen–Dice_coefficient>`_
     """
 
-    if not from_logits:
+   """ if not from_logits:
         # transform back to logits
         _epsilon = tf.convert_to_tensor(1e-7, y_pred.dtype.base_dtype)
         y_pred = tf.clip_by_value(y_pred, _epsilon, 1 - _epsilon)
@@ -67,11 +67,11 @@ def dice_soft(y_true, y_pred, loss_type='sorensen', axis=[1,2,3], smooth=1., fro
     dice = (2. * inse + smooth) / (l + r + smooth)
     ##
     dice = tf.reduce_mean(dice)
-    return dice
-    #y_true_f = K.flatten(y_true)
-    #y_pred_f = K.flatten(y_pred)
-    #intersection = K.sum(y_true_f * y_pred_f)
-    #return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+    return dice"""
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    intersection = K.sum(y_true_f * y_pred_f)
+    return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
 
 
 
