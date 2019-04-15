@@ -14,10 +14,34 @@ from keras import backend as K
 
 def dice_soft(y_true, y_pred, loss_type='sorensen', axis=[1,2,3], smooth=1., from_logits=False):
 
-    y_true_f = K.flatten(y_true)
-    y_pred_f = K.flatten(y_pred)
-    intersection = K.sum(y_true_f * y_pred_f)
-    return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+    if not from_logits:
+        # transform back to logits
+        _epsilon = tf.convert_to_tensor(1e-7, y_pred.dtype.base_dtype)
+        y_pred = tf.clip_by_value(y_pred, 0, 1)
+        #y_pred = tf.log(y_pred / (1 - y_pred))
+
+    inse = tf.reduce_sum(y_pred * y_true, axis=axis)
+    if loss_type == 'jaccard':
+        l = tf.reduce_sum(y_pred * y_pred, axis=axis)
+        r = tf.reduce_sum(y_true * y_true, axis=axis)
+    elif loss_type == 'sorensen':
+        l = tf.reduce_sum(y_pred, axis=axis)
+        r = tf.reduce_sum(y_true, axis=axis)
+    else:
+        raise Exception("Unknow loss_type")
+    ## old axis=[0,1,2,3]
+    # dice = 2 * (inse) / (l + r)
+    # epsilon = 1e-5
+    # dice = tf.clip_by_value(dice, 0, 1.0-epsilon) # if all empty, dice = 1
+    ## new haodong
+    dice = (2. * inse + smooth) / (l + r + smooth)
+    ##
+    dice = tf.reduce_mean(dice)
+    return dice
+   # y_true_f = K.flatten(y_true)
+   # y_pred_f = K.flatten(y_pred)
+   # intersection = K.sum(y_true_f * y_pred_f)
+   # return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
 
 
 
