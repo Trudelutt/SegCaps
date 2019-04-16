@@ -76,7 +76,7 @@ def compile_model(args, net_input_shape, uncomp_model):
     else:
         metrics = [dice_hard]
 
-    loss, loss_weighting = get_loss( split=args.split_num, net=args.net,
+    loss, loss_weighting = get_loss( split=args.split_nr, net=args.net,
                                     recon_wei=args.recon_wei, choice=args.loss, label=args.label)
 
     # If using CPU or single GPU

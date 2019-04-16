@@ -57,7 +57,7 @@ def main(args):
     model_list = create_model(args=args, input_shape=net_input_shape)
     print_summary(model=model_list[0], positions=[.38, .65, .75, 1.])
 
-    args.output_name = 'split-' + str(args.split_num) + '_batch-' + str(args.batch_size) + \
+    args.output_name = 'split-' + str(args.split_nr) + '_batch-' + str(args.batch_size) + \
                        '_shuff-' + str(args.shuffle_data) + '_aug-' + str(args.aug_data) + \
                        '_loss-' + str(args.loss) + '_channels-' + str(args.channels) + \
                        '_frangi_mode-' + str(args.frangi_mode) + '_strid-' + str(args.stride) + \
@@ -111,8 +111,6 @@ if __name__ == '__main__':
                         help='The root directory for your data.')
     parser.add_argument('--weights_path', type=str, default='',
                         help='/path/to/trained_model.hdf5 from root. Set to "" for none.')
-    parser.add_argument('--split_num', type=int, default=0,
-                        help='Which training split to train/test on.')
     parser.add_argument('--net', type=str.lower, default='segcapsr3',
                         choices=['segcapsr3', 'segcapsr1', 'segcapsbasic', 'unet','bvnet', 'tiramisu', 'bvnet3d'],
                         help='Choose your network.')

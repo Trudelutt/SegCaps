@@ -116,7 +116,7 @@ def compute_class_weights(train_data_list):
     return neg/pos
 
 def load_class_weights( split, label):
-    class_weight_filename = join( label+'_split_lists', 'train_split_class_weights.npy')
+    class_weight_filename = join('split_lists', label+'_'+str(split)+ '_split_lists', 'train_split_class_weights.npy')
     try:
         return np.load(class_weight_filename)
     except:
@@ -224,7 +224,7 @@ def convert_data_to_numpy(args, label, img_name, np_subfolder_path, no_masks=Fal
     numpy_path = 'np_files'
     img_path = img_name.replace(label,"CCTA")
     mask_path = img_name
-    fig_path = 'figs'
+    fig_path = join('fig_path', np_subfolder_path)
     try:
         mkdir(numpy_path)
     except:
@@ -245,6 +245,14 @@ def convert_data_to_numpy(args, label, img_name, np_subfolder_path, no_masks=Fal
             print("Something went wrong")
             print(join(numpy_path, np_subfolder_path, fname + '.npz'))
             pass
+    try:
+        mkdir('fig_path')
+    except:
+        pass
+    try:
+        mkdir(fig_path)
+    except:
+        pass
 
     try:
         img, mask = get_done_prossed_samples_from_file(args, img_path, mask_path, train)
@@ -257,27 +265,27 @@ def convert_data_to_numpy(args, label, img_name, np_subfolder_path, no_masks=Fal
             mask[mask > 4.5] = 0 # Trachea = 5
             mask[mask >= 1] = 1 # Left lung = 3, Right lung = 4
             mask[mask != 1] = 0 # Non-Lung/Background
-            mask = mask.astype(np.uint8)
+            mask = mask.astype(np.uint8)"""
 
         try:
             f, ax = plt.subplots(1, 3, figsize=(15, 5))
 
-            ax[0].imshow(img[:, :, img.shape[2] // 3], cmap='gray')
+            ax[0].imshow(img[img.shape[0] // 3][...,2], cmap='gray')
             if not no_masks:
-                ax[0].imshow(mask[:, :, img.shape[2] // 3], alpha=0.15)
-            ax[0].set_title('Slice {}/{}'.format(img.shape[2] // 3, img.shape[2]))
+                ax[0].imshow(mask[img.shape[0] // 3][...,0], alpha=0.15)
+            ax[0].set_title('Slice {}/{}'.format(img.shape[0] // 3, img.shape[0]))
             ax[0].axis('off')
 
-            ax[1].imshow(img[:, :, img.shape[2] // 2], cmap='gray')
+            ax[1].imshow(img[img.shape[0] // 2][...,2], cmap='gray')
             if not no_masks:
-                ax[1].imshow(mask[:, :, img.shape[2] // 2], alpha=0.15)
-            ax[1].set_title('Slice {}/{}'.format(img.shape[2] // 2, img.shape[2]))
+                ax[1].imshow(mask[img.shape[0] // 2][...,0], alpha=0.15)
+            ax[1].set_title('Slice {}/{}'.format(img.shape[0] // 2, img.shape[0]))
             ax[1].axis('off')
 
-            ax[2].imshow(img[:, :, img.shape[2] // 2 + img.shape[2] // 4], cmap='gray')
+            ax[2].imshow(img[img.shape[0] // 2 + img.shape[0] // 4][...,2], cmap='gray')
             if not no_masks:
-                ax[2].imshow(mask[:, :, img.shape[2] // 2 + img.shape[2] // 4], alpha=0.15)
-            ax[2].set_title('Slice {}/{}'.format(img.shape[2] // 2 + img.shape[2] // 4, img.shape[2]))
+                ax[2].imshow(mask[img.shape[0] // 2 + img.shape[0] // 4][...,0], alpha=0.15)
+            ax[2].set_title('Slice {}/{}'.format(img.shape[0] // 2 + img.shape[0] // 4, img.shape[0]))
             ax[2].axis('off')
 
             fig = plt.gcf()
@@ -290,7 +298,7 @@ def convert_data_to_numpy(args, label, img_name, np_subfolder_path, no_masks=Fal
             print('Error creating qualitative figure for {}'.format(fname))
             print(e)
             print('-'*100+'\n')
-"""
+
         if not no_masks:
             np.savez_compressed(join(numpy_path, np_subfolder_path, fname + '.npz'), img=img, mask=mask)
         else:
@@ -396,9 +404,8 @@ def generate_train_batches(args, label,root_path, train_list, net_input_shape, n
                            stride=1, downSampAmt=1, shuff=1, aug_data=1):
     # Create placeholders for training
     img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.float32)
-    print(img_batch.shape)
     mask_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.uint8)
-    numpy_subfolder_path =  args.net + "_channels" + str(args.channels) + "_stride" + str(args.stride)
+    numpy_subfolder_path = str(args.split_nr)+'split_' + args.net + "_channels" + str(args.channels) + "_stride" + str(args.stride)
     if args.frangi_mode== 'frangi_input':
         numpy_subfolder_path += "_Frangi_input"
     elif args.frangi_mode == 'frangi_comb':
@@ -489,7 +496,7 @@ def generate_val_batches(args, label, root_path, val_list, net_input_shape, net,
     # Create placeholders for validation
     img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.float32)
     mask_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.uint8)
-    numpy_subfolder_path =  args.net + "_channels" + str(args.channels) + "_stride" + str(args.stride)
+    numpy_subfolder_path =  str(args.split_nr)+'split_'+args.net + "_channels" + str(args.channels) + "_stride" + str(args.stride)
     if args.frangi_mode== 'frangi_input':
         numpy_subfolder_path += "_Frangi_input"
     elif args.frangi_mode == 'frangi_comb':
@@ -579,7 +586,7 @@ def generate_test_batches(args, label, root_path, test_list, net_input_shape, ba
                           stride=1, downSampAmt=1, shuff=0):
     # Create placeholders for testing
     img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.float32)
-    numpy_subfolder_path = args.net + "_channels" + str(args.channels) + "_stride" + str(args.stride)
+    numpy_subfolder_path = str(args.split_nr)+'split_' + args.net + "_channels" + str(args.channels) + "_stride" + str(args.stride)
     if args.frangi_mode== 'frangi_input':
         numpy_subfolder_path += "_Frangi_input"
     elif args.frangi_mode == 'frangi_comb':

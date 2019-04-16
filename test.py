@@ -77,7 +77,7 @@ def test(args, test_list, model_list, net_input_shape):
     else:
         weights_path = join(args.check_dir, args.weights_path.replace("saved_models/", ""))
 
-    output_dir = join( 'results','split'+str(args.split_num), weights_path[:-5])
+    output_dir = join( 'results','split'+str(args.split_nr), weights_path[:-5])
     raw_out_dir = join(output_dir, 'raw_output')
     fin_out_dir = join(output_dir, 'final_output')
     fig_out_dir = join(output_dir, 'qual_figs')
