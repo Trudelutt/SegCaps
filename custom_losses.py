@@ -13,7 +13,10 @@ import tensorflow as tf
 from keras import backend as K
 
 def dice_soft(y_true, y_pred, loss_type='sorensen', axis=[1,2,3], smooth=1., from_logits=False):
-
+    if tf.rank(y_true) == 5:
+        axis = [1,2,3,4]
+    else:
+        axis = [1,2,3]
     if not from_logits:
         # transform back to logits
         _epsilon = tf.convert_to_tensor(1e-7, y_pred.dtype.base_dtype)
@@ -67,6 +70,10 @@ def dice_hard(y_true, y_pred, threshold=0.5, axis=[1,2,3], smooth=1):
     -----------
     - `Wiki-Dice <https://en.wikipedia.org/wiki/Sørensen–Dice_coefficient>`_
     """
+    if tf.rank(y_true) == 5:
+        axis = [1,2,3,4]
+    else:
+        axis = [1,2,3]
     y_pred = tf.cast(y_pred > threshold, dtype=tf.float32)
     y_true = tf.cast(y_true > threshold, dtype=tf.float32)
     inse = tf.reduce_sum(tf.multiply(y_pred, y_true), axis=axis)

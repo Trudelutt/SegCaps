@@ -265,7 +265,7 @@ def convert_data_to_numpy(args, label, img_name, np_subfolder_path, no_masks=Fal
             mask[mask > 4.5] = 0 # Trachea = 5
             mask[mask >= 1] = 1 # Left lung = 3, Right lung = 4
             mask[mask != 1] = 0 # Non-Lung/Background
-            mask = mask.astype(np.uint8)"""
+            mask = mask.astype(np.uint8)
 
         try:
             f, ax = plt.subplots(1, 3, figsize=(15, 5))
@@ -297,7 +297,7 @@ def convert_data_to_numpy(args, label, img_name, np_subfolder_path, no_masks=Fal
             print('\n'+'-'*100)
             print('Error creating qualitative figure for {}'.format(fname))
             print(e)
-            print('-'*100+'\n')
+            print('-'*100+'\n')"""
 
         if not no_masks:
             np.savez_compressed(join(numpy_path, np_subfolder_path, fname + '.npz'), img=img, mask=mask)

@@ -23,7 +23,7 @@ from tqdm import tqdm
 import numpy as np
 import scipy.ndimage.morphology
 from skimage import measure, filters
-from metrics import dc, jc, assd
+from metrics import dc, jc, assd, precision, recall
 
 from keras import backend as K
 K.set_image_data_format('channels_last')
@@ -43,7 +43,9 @@ def threshold_mask(raw_output, threshold):
 
     raw_output[raw_output > threshold] = 1
     raw_output[raw_output < 1] = 0
+    return raw_output
 
+def remove_noise(raw_output):
     all_labels = measure.label(raw_output)
     props = measure.regionprops(all_labels)
     props.sort(key=lambda x: x.area, reverse=True)
@@ -75,9 +77,10 @@ def test(args, test_list, model_list, net_input_shape):
     if args.weights_path == '':
         weights_path = join(args.check_dir, args.output_name + '_model_' + args.time + '.hdf5')
     else:
-        weights_path = join(args.check_dir, args.weights_path.replace("saved_models/", ""))
+        sub_res_weights_path = join(args.check_dir, basename(args.weights_path).replace("saved_models/", ""))
+        weights_path = args.weights_path
 
-    output_dir = join( 'results','split'+str(args.split_nr), weights_path[:-5])
+    output_dir = join( 'results','split'+str(args.split_nr), sub_res_weights_path[:-5])
     raw_out_dir = join(output_dir, 'raw_output')
     fin_out_dir = join(output_dir, 'final_output')
     fig_out_dir = join(output_dir, 'qual_figs')
@@ -108,6 +111,7 @@ def test(args, test_list, model_list, net_input_shape):
     outfile = ''
     if args.compute_dice:
         dice_arr = np.zeros((len(test_list)))
+        dice_arr_post = np.zeros((len(test_list)))
         outfile += 'dice_'
     if args.compute_jaccard:
         jacc_arr = np.zeros((len(test_list)))
@@ -115,6 +119,12 @@ def test(args, test_list, model_list, net_input_shape):
     if args.compute_assd:
         assd_arr = np.zeros((len(test_list)))
         outfile += 'assd_'
+    if args.compute_recall:
+        recall_arr = np.zeros((len(test_list)))
+        recall_arr_post = np.zeros((len(test_list)))
+    if args.compute_precision:
+        precision_arr = np.zeros((len(test_list)))
+        precision_arr_post = np.zeros((len(test_list)))
 
     # Testing the network
     print('Testing... This will take some time...')
@@ -125,10 +135,17 @@ def test(args, test_list, model_list, net_input_shape):
         row = ['Scan Name']
         if args.compute_dice:
             row.append('Dice Coefficient')
+            row.append('Dice Coefficient Post')
         if args.compute_jaccard:
             row.append('Jaccard Index')
         if args.compute_assd:
             row.append('Average Symmetric Surface Distance')
+        if args.compute_recall:
+            row.append('Recall')
+            row.append('Recall Post')
+        if args.compute_precision:
+            row.append('Precision')
+            row.append('Precision Post')
 
         writer.writerow(row)
         for i, img in enumerate(tqdm(test_list)):
@@ -155,7 +172,8 @@ def test(args, test_list, model_list, net_input_shape):
 
             output_img = sitk.GetImageFromArray(output)
             print('Segmenting Output')
-            output_bin = threshold_mask(output, args.thresh_level)
+            threshold_output = threshold_mask(output, args.thresh_level)
+            output_bin = remove_noise(threshold_output)
             output_mask = sitk.GetImageFromArray(output_bin)
 
             output_img.CopyInformation(sitk_img)
@@ -169,8 +187,8 @@ def test(args, test_list, model_list, net_input_shape):
             #TODO change to get correcr mask name
             sitk_mask = sitk.ReadImage(img[1])
             gt_data = sitk.GetArrayFromImage(sitk_mask)
-            create_and_write_viz_nii(join(raw_out_dir, basename(img[1][:-7]) + '_raw_output_viz' + img[1][-7:]), sitk_img, output_bin, gt_data)
-
+            create_and_write_viz_nii(join(raw_out_dir, basename(img[1][:-7]) + '_final_output_viz' + img[1][-7:]), sitk_img, output_bin, gt_data)
+            create_and_write_viz_nii(join(raw_out_dir, basename(img[1][:-7]) + '_raw_output_viz' + img[1][-7:]), sitk_img,threshold_output , gt_data)
             # Plot Qual Figure
             print('Creating Qualitative Figure for Quick Reference')
             f, ax = plt.subplots(1, 3, figsize=(15, 5))
@@ -202,13 +220,16 @@ def test(args, test_list, model_list, net_input_shape):
             plt.savefig(join(fig_out_dir, basename(img[1][:-7]) + '_qual_fig' + '.png'),
                         format='png', bbox_inches='tight')
             plt.close('all')
-
             row = [img[0][:-7]]
             if args.compute_dice:
                 print('Computing Dice')
-                dice_arr[i] = dc(output_bin, gt_data)
+                dice_arr[i] = dc(threshold_output, gt_data)
                 print('\tDice: {}'.format(dice_arr[i]))
                 row.append(dice_arr[i])
+                print('Computing Dice Post')
+                dice_arr_post[i] = dc(output_bin, gt_data)
+                print('\tDice post: {}'.format(dice_arr_post[i]))
+                row.append(dice_arr_post[i])
             if args.compute_jaccard:
                 print('Computing Jaccard')
                 jacc_arr[i] = jc(output_bin, gt_data)
@@ -219,16 +240,41 @@ def test(args, test_list, model_list, net_input_shape):
                 assd_arr[i] = assd(output_bin, gt_data, voxelspacing=sitk_img.GetSpacing(), connectivity=1)
                 print('\tASSD: {}'.format(assd_arr[i]))
                 row.append(assd_arr[i])
+            if args.compute_recall:
+                print('Recall')
+                recall_arr[i] = recall(threshold_output, gt_data)
+                print('\tRecall: {}'.format(recall_arr[i]))
+                row.append(recall_arr[i])
+                print('Recall Post')
+                recall_arr_post[i] = recall(output_bin, gt_data)
+                print('\tRecall post: {}'.format(recall_arr_post[i]))
+                row.append(recall_arr_post[i])
+            if args.compute_precision:
+                print('Precision')
+                precision_arr[i] = precision(threshold_output, gt_data)
+                print('\tPrecision: {}'.format(precision_arr[i]))
+                row.append(precision_arr[i])
+                print('Precision Post')
+                precision_arr_post[i] = precision(output_bin, gt_data)
+                print('\tPrecision post: {}'.format(precision_arr_post[i]))
+                row.append(precision_arr_post[i])
 
             writer.writerow(row)
 
         row = ['Average Scores']
         if args.compute_dice:
             row.append(np.mean(dice_arr))
+            row.append(np.mean(dice_arr_post))
         if args.compute_jaccard:
             row.append(np.mean(jacc_arr))
         if args.compute_assd:
             row.append(np.mean(assd_arr))
+        if args.compute_recall:
+            row.append(np.mean(recall_arr))
+            row.append(np.mean(recall_arr_post))
+        if args.compute_precision:
+            row.append(np.mean(precision_arr))
+            row.append(np.mean(precision_arr_post))
         writer.writerow(row)
 
     print('Done.')
