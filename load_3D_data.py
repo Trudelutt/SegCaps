@@ -104,7 +104,11 @@ def compute_class_weights(train_data_list):
     pos = 0.0
     neg = 0.0
     for img_name in tqdm(train_data_list):
-        img = sitk.GetArrayFromImage(sitk.ReadImage(img_name[1]))
+        try:
+            img = sitk.GetArrayFromImage(sitk.ReadImage(img_name[1]))
+        except:
+            print("Can not load file " + img_name[1])
+            continue
         for slic in img:
             if not np.any(slic):
                 continue
