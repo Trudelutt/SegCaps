@@ -129,7 +129,7 @@ def load_class_weights( split, label):
         return value
 
 
-def split_data(root_path, label, splits=4):
+def split_data(data_root_dir, label, splits=4):
     print("Create split")
     outdir= "split_lists"
     try:
