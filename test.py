@@ -77,8 +77,8 @@ def test(args, test_list, model_list, net_input_shape):
     if args.weights_path == '':
         weights_path = join(args.check_dir, args.output_name + '_model_' + args.time + '.hdf5')
     else:
-        sub_res_weights_path = join(args.check_dir, basename(args.weights_path).replace("saved_models/", ""))
         weights_path = args.weights_path
+    sub_res_weights_path = join(args.check_dir, basename(args.weights_path).replace("saved_models/", ""))
 
     output_dir = join( 'results','split'+str(args.split_nr), sub_res_weights_path[:-5])
     raw_out_dir = join(output_dir, 'raw_output')
@@ -164,9 +164,29 @@ def test(args, test_list, model_list, net_input_shape):
                                                         steps=num_slices, max_queue_size=1, workers=1,
                                                         use_multiprocessing=False, verbose=1)
 
+
             if args.net.find('caps') != -1:
                 output = output_array[0][:,:,:,0]
                 #recon = output_array[1][:,:,:,0]
+            elif args.net == 'bvnet3d':
+                numpy_subfolder_path = str(args.split_nr)+'split_' + args.net + "_channels" + str(args.channels) + "_stride" + str(args.stride)
+                if args.frangi_mode== 'frangi_input':
+                    numpy_subfolder_path += "_Frangi_input"
+                elif args.frangi_mode == 'frangi_comb':
+                    numpy_subfolder_path += '_Frangi_comb'
+                elif args.frangi_mode == 'frangi_mask':
+                    numpy_subfolder_path += '_Frangi_mask'
+                try:
+                    with np.load(join("np_files", np_subfolder_path, basename(img[:-7]) + '.npz')) as data:
+                        orgshape = data['img'].shape
+
+                except:
+                    print("Did not find numpy array")
+                    print(join(numpy_path, np_subfolder_path, fname + '.npz'))
+                output = from_patches_to_numpy(output_array, orgshape)
+                output= output[:num_slices]
+                output_array = output.reshape(img_data.shape)
+
             else:
                 output = output_array[:,:,:,0]
 
