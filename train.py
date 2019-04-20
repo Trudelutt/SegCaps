@@ -56,15 +56,16 @@ def get_callbacks(arguments):
         monitor_name = 'val_out_seg_dice_hard'
     else:
         monitor_name = 'val_dice_hard'
+    monitor_name = 'val_loss'
 
     csv_logger = CSVLogger(join(arguments.log_dir, arguments.output_name + '_log_' + arguments.time + '.csv'), separator=',')
     tb = TensorBoard(arguments.tf_log_dir, batch_size=arguments.batch_size, histogram_freq=0)
     model_checkpoint = ModelCheckpoint(join(arguments.check_dir, arguments.output_name + '_model_' + arguments.time + '.hdf5'),
                                        monitor=monitor_name, save_best_only=True, save_weights_only=True,
-                                       verbose=1, mode='max')
-    lr_reducer = ReduceLROnPlateau(monitor=monitor_name, factor=0.05, cooldown=0, patience=5,verbose=1, mode='max')
+                                       verbose=1, mode='min')
+    lr_reducer = ReduceLROnPlateau(monitor=monitor_name, factor=0.05, cooldown=0, patience=5,verbose=1, mode='min')
     #Code had orginally patience 25
-    early_stopper = EarlyStopping(monitor=monitor_name, min_delta=0, patience=12, verbose=0, mode='max')
+    early_stopper = EarlyStopping(monitor=monitor_name, min_delta=0, patience=12, verbose=0, mode='min')
 
     return [model_checkpoint, csv_logger, lr_reducer, early_stopper, tb]
 
