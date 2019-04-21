@@ -30,6 +30,7 @@ K.set_image_data_format('channels_last')
 from keras.utils import print_summary
 
 from load_3D_data import generate_test_batches
+from preprossesing import get_training_patches, from_patches_to_numpy
 
 
 def threshold_mask(raw_output, threshold):
@@ -76,9 +77,10 @@ def create_and_write_viz_nii(name, meta_sitk, pred, gt):
 def test(args, test_list, model_list, net_input_shape):
     if args.weights_path == '':
         weights_path = join(args.check_dir, args.output_name + '_model_' + args.time + '.hdf5')
+        sub_res_weights_path = weights_path
     else:
         weights_path = args.weights_path
-    sub_res_weights_path = join(args.check_dir, basename(args.weights_path).replace("saved_models/", ""))
+        sub_res_weights_path = join(args.check_dir, basename(weights_path.replace("saved_models/", "")))
 
     output_dir = join( 'results','split'+str(args.split_nr), sub_res_weights_path[:-5])
     raw_out_dir = join(output_dir, 'raw_output')
@@ -153,7 +155,13 @@ def test(args, test_list, model_list, net_input_shape):
             print(img[0])
             sitk_img = sitk.ReadImage(img[0])
             img_data = sitk.GetArrayFromImage(sitk_img)
-            num_slices = img_data.shape[0]
+
+            if args.net == 'bvnet3d':
+                num_slices_before_padding = img_data.shape[0]
+                pred_img, pred_mask, orgshape = get_training_patches([[img[0], img[1]]], args.label, remove_only_background_patches=False, return_shape=True)
+                num_slices = pred_mask.shape[0]
+            else:
+                num_slices = img_data.shape[0]
 
             output_array = eval_model.predict_generator(generate_test_batches(args,args.label, args.data_root_dir, [img],
                                                                               net_input_shape,
@@ -169,22 +177,8 @@ def test(args, test_list, model_list, net_input_shape):
                 output = output_array[0][:,:,:,0]
                 #recon = output_array[1][:,:,:,0]
             elif args.net == 'bvnet3d':
-                numpy_subfolder_path = str(args.split_nr)+'split_' + args.net + "_channels" + str(args.channels) + "_stride" + str(args.stride)
-                if args.frangi_mode== 'frangi_input':
-                    numpy_subfolder_path += "_Frangi_input"
-                elif args.frangi_mode == 'frangi_comb':
-                    numpy_subfolder_path += '_Frangi_comb'
-                elif args.frangi_mode == 'frangi_mask':
-                    numpy_subfolder_path += '_Frangi_mask'
-                try:
-                    with np.load(join("np_files", np_subfolder_path, basename(img[:-7]) + '.npz')) as data:
-                        orgshape = data['img'].shape
-
-                except:
-                    print("Did not find numpy array")
-                    print(join(numpy_path, np_subfolder_path, fname + '.npz'))
                 output = from_patches_to_numpy(output_array, orgshape)
-                output= output[:num_slices]
+                output= output[:num_slices_before_padding]
                 output_array = output.reshape(img_data.shape)
 
             else:

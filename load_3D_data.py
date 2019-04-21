@@ -409,7 +409,7 @@ def generate_train_batches(args, label,root_path, train_list, net_input_shape, n
     # Create placeholders for training
     img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.float32)
     mask_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.uint8)
-    numpy_subfolder_path = str(args.split_nr)+'split_' + args.net + "_channels" + str(args.channels) + "_stride" + str(args.stride)
+    numpy_subfolder_path = str(args.split_nr)+'split_' + args.label +"_net_input_shape"+ str(net_input_shape).strip()  + "_stride" + str(args.stride)
     if args.frangi_mode== 'frangi_input':
         numpy_subfolder_path += "_Frangi_input"
     elif args.frangi_mode == 'frangi_comb':
@@ -500,7 +500,7 @@ def generate_val_batches(args, label, root_path, val_list, net_input_shape, net,
     # Create placeholders for validation
     img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.float32)
     mask_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.uint8)
-    numpy_subfolder_path =  str(args.split_nr)+'split_'+args.net + "_channels" + str(args.channels) + "_stride" + str(args.stride)
+    numpy_subfolder_path =  str(args.split_nr)+'split_' + args.label +"_net_input_shape"+ str(net_input_shape).strip()  + "_stride" + str(args.stride)
     if args.frangi_mode== 'frangi_input':
         numpy_subfolder_path += "_Frangi_input"
     elif args.frangi_mode == 'frangi_comb':
@@ -590,7 +590,7 @@ def generate_test_batches(args, label, root_path, test_list, net_input_shape, ba
                           stride=1, downSampAmt=1, shuff=0):
     # Create placeholders for testing
     img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.float32)
-    numpy_subfolder_path = str(args.split_nr)+'split_' + args.net + "_channels" + str(args.channels) + "_stride" + str(args.stride)
+    numpy_subfolder_path = str(args.split_nr)+'split_' + args.label +"_net_input_shape"+ str(net_input_shape).strip()  + "_stride" + str(args.stride)
     if args.frangi_mode== 'frangi_input':
         numpy_subfolder_path += "_Frangi_input"
     elif args.frangi_mode == 'frangi_comb':
