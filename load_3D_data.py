@@ -126,7 +126,7 @@ def load_class_weights( split, label):
     except:
         print('Class weight file {} not found.\nComputing class weights now. This may take '
               'some time.'.format(class_weight_filename))
-        train_data_list, _, _ = load_data(label)
+        train_data_list, _, _ = load_data(label, split)
         value = compute_class_weights(train_data_list)
         np.save(class_weight_filename,value)
         print('Finished computing class weights. This value has been saved for this training split.')
