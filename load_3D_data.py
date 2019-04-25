@@ -442,8 +442,8 @@ def generate_train_batches(args, label,root_path, train_list, net_input_shape, n
                 subSampAmt = int(rand(1)*(train_img.shape[2]*0.05))"""
 
             indicies = np.arange(0, train_img.shape[0])
-            if shuff:
-                shuffle(indicies)
+            #if shuff:
+                #shuffle(indicies)
 
             for j in indicies:
                 #if not np.any(train_mask[:, :, j:j + numSlices * (subSampAmt+1):subSampAmt+1]):
@@ -528,8 +528,8 @@ def generate_val_batches(args, label, root_path, val_list, net_input_shape, net,
                 else:
                     print('\nFinished making npz file.')
             indicies = np.arange(0, val_img.shape[0])
-            if shuff:
-                shuffle(indicies)
+            #if shuff:
+                #shuffle(indicies)
 
             for j in indicies:
             #if not np.any(val_mask[:, :, j:j + numSlices * (subSampAmt+1):subSampAmt+1]):
