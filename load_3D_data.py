@@ -141,7 +141,10 @@ def split_data(data_root_dir, label, splits=4):
     except:
         pass
     for i in range(splits):
-        training_list = fetch_training_data_ca_files(data_root_dir,label)
+        if "st.Olav" in data_root_dir:
+            training_list = fetch_training_data_ca_files(data_root_dir,label)
+        elif "3Dircadb" in data_root_dir:
+            training_list = fetch_training_data_portal_veins_files(data_root_dir,label)
         training_val_list, test_list = train_test_split(training_list, test_size=0.1, random_state=i)
         #TODO change name
         new_training_list, val_list = train_test_split(training_val_list, test_size=0.1, random_state=i)
@@ -175,58 +178,16 @@ def load_data(label, split_nr=0):
     print("trainfiles: " + str(len(train)) + ", valfiles: " + str(len(val)) + ", testfiles: " + str(len(test)))
     return train, val, test
 
-def fetch_training_data_ca_files(data_root_dir,label="LM"):
-    #path = glob("../st.Olav/*/*/*/")
-    #path = glob("../../st.Olav/*/*/*/")
-    if data_root_dir=="../st.Olav":
-        data_root_dir += "/*/*/*/"
-    path = glob(data_root_dir)
-    training_data_files= list()
-    for i in xrange(len(path)):
-        try:
-            data_path = glob(path[i] + "*CCTA.nii.gz")[0]
-            label_path = glob(path[i] + "*" + label + ".nii.gz")[0]
-        except IndexError:
-            if label=="both" and i == 0:
-                print("Makes both labels")
-                make_both_label()
-                label_path = glob(path[i] + "*" + label + ".nii.gz")[0]
-            else:
-                print("out of xrange for %s" %(path[i]))
-        else:
-            training_data_files.append(tuple([data_path, label_path]))
-    return training_data_files
-
-
-"""def split_data(root_path, label, num_splits=4):
-    mask_list= glob(join(root_path,"*/*/*/*" + label + ".nii.gz"))
-    assert len(mask_list) != 0, 'Unable to find any files in {}'.format(join(root_path,"/*/*/*"+ label))
-
-    outdir = 'split_lists'
-    try:
-        mkdir(outdir)
-    except:
-        pass
-
-    kf = KFold(n_splits=num_splits)
-    n = 0
-    for train_index, test_index in kf.split(mask_list):
-        with open(join(outdir,'train_split_' + str(n) + label +'.csv'), 'wb') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            for i in train_index:
-                writer.writerow([mask_list[i]])
-        with open(join(outdir,'test_split_' + str(n) + label + '.csv'), 'wb') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            for i in test_index:
-                writer.writerow([mask_list[i]])
-        n += 1"""
 
 
 def convert_data_to_numpy(args, label, img_name, np_subfolder_path, no_masks=False, overwrite=False,train=False):
     print("Converting numpy")
     fname = basename(img_name[:-7])
     numpy_path = 'np_files'
-    img_path = img_name.replace(label,"CCTA")
+    if "st.Olav" in img_name:
+        img_path = img_name.replace(label,"CCTA")
+    elif "3Dircadb1" in img_name:
+        img_path = img_name.replace(label,"PATIENT")
     mask_path = img_name
     fig_path = join('fig_path', np_subfolder_path)
     try:

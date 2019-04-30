@@ -49,7 +49,7 @@ def main(args):
 
     # Get image properties from first image. Assume they are all the same.
     #img_shape = sitk.GetArrayFromImage(sitk.ReadImage(join(args.data_root_dir, 'imgs', train_list[0][0]))).shape
-    img_shape = sitk.GetArrayFromImage(sitk.ReadImage(train_list[0][0].replace(args.label, "CCTA"))).shape
+    img_shape = sitk.GetArrayFromImage(sitk.ReadImage(train_list[0][0])).shape
     net_input_shape = (img_shape[1], img_shape[2], args.channels)
     if args.net == 'bvnet3d':
         net_input_shape = (64,64,64,args.channels)
@@ -131,7 +131,7 @@ if __name__ == '__main__':
     parser.add_argument('--loss', type=str.lower, default='w_bce', choices=['bce', 'w_bce', 'dice', 'mar', 'w_mar'],
                         help='Which loss to use. "bce" and "w_bce": unweighted and weighted binary cross entropy'
                              '"dice": soft dice coefficient, "mar" and "w_mar": unweighted and weighted margin loss.')
-    parser.add_argument('--label', type=str, default='RCA', choices=['both', 'RCA', 'LM', 'Aorta'],
+    parser.add_argument('--label', type=str, default='RCA', choices=['both', 'RCA', 'LM', 'Aorta', 'portalvein'],
                         help='Which label to use.')
     parser.add_argument('--splits', type=int, default=4,
                     help='Number of different datasplits.')

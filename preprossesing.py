@@ -4,7 +4,7 @@ import csv
 import pandas as pd
 import SimpleITK as sitk
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 #from batch_generator import generate_train_batches
 from glob import glob
 from os import mkdir
@@ -15,51 +15,9 @@ from keras.utils import to_categorical
 from skimage.transform import resize
 from sklearn.model_selection import train_test_split
 import nibabel as nib
+import dicom2nifti
 #from augmentation import dataaug
 
-
-
-def create_split(data_root_dir, label, splits=4):
-    print("Create split")
-    outdir= "split_lists"
-    try:
-        mkdir(outdir)
-    except:
-        pass
-    for i in range(splits):
-        training_list = fetch_training_data_ca_files(data_root_dir,label)
-        training_val_list, test_list = train_test_split(training_list, test_size=0.1, random_state=i)
-        #TODO change name
-        new_training_list, val_list = train_test_split(training_val_list, test_size=0.1, random_state=i)
-        print("trainfiles: " + str(len(new_training_list)) + " val: " + str(len(val_list)) + " test: " + str(len(test_list)))
-        split_dir = join(outdir,label +'_' + str(i) + '_split_lists')
-        try:
-            mkdir(split_dir)
-        except:
-            print("Could not create foulder")
-
-        with open(join(split_dir,'split_train.csv'), 'w') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            for sample in new_training_list:
-                writer.writerow([x for x in sample])
-        with open(join(split_dir,'split_val.csv'), 'w') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            for sample in val_list:
-                writer.writerow([x for x in sample])
-        with open(join(split_dir,'split_test.csv'), 'w') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            for sample in test_list:
-                writer.writerow([x for x in sample])
-
-def get_train_val_test(label, split_nr=0):
-    train, val, test = [], [], []
-    given_split_dir= join("split_lists", label + "_"+str(split_nr) + "_split_lists")
-    print(given_split_dir)
-    train = pd.read_csv(join(given_split_dir,'split_train.csv'), sep=',',header=None).values
-    val = pd.read_csv(join(given_split_dir,'split_val.csv'), sep=',',header=None).values
-    test = pd.read_csv(join(given_split_dir,'split_test.csv'), sep=',',header=None).values
-    print("trainfiles: " + str(len(train)) + ", valfiles: " + str(len(val)) + ", testfiles: " + str(len(test)))
-    return train, val, test
 
 
 #Both LM and RCA
@@ -120,21 +78,19 @@ def get_preprossed_numpy_arrays_from_file(image_path, label_path):
     sitk_label  = sitk.ReadImage(label_path )
     numpy_label = sitk.GetArrayFromImage(sitk_label)
     if not np.array_equal(np.unique(numpy_label), np.array([0.,1.])):
-        print("numpy is not binary mask")
+        #print("numpy is not binary mask")
         #numpy_label = numpy_label / np.max(numpy_label)
         #threshold = np.median(numpy_label)
-        print("UNique values")
-        print(np.unique(numpy_label))
+        #print("UNique values")
+        #print(np.unique(numpy_label))
         frangi_with_threshold = np.zeros(numpy_label.shape)
         frangi_with_threshold[np.where(numpy_label > 1)] = 1.0
-        print("it is suposed to be binary now")
-        print(np.unique(frangi_with_threshold))
-        frangi_sitk = sitk.GetImageFromArray(frangi_with_threshold)
-        frangi_sitk.CopyInformation(sitk_image)
-        sitk.WriteImage(frangi_sitk, join('logs','frangi_test', image_path.split("/")[-1][:-7] + '_frangi_mask' + image_path[-7:]))
-        return preprosses_images(frangi_with_threshold, numpy_label)
-
-
+        #print("it is suposed to be binary now")
+        #print(np.unique(frangi_with_threshold))
+        #frangi_sitk = sitk.GetImageFromArray(frangi_with_threshold)
+        #frangi_sitk.CopyInformation(sitk_image)
+        #sitk.WriteImage(frangi_sitk, join('logs','mask_test', image_path.split("/")[-1]))
+        return preprosses_images(numpy_image, frangi_with_threshold)
     return preprosses_images(numpy_image, numpy_label)
 
 
@@ -214,6 +170,28 @@ def fetch_training_data_ca_files(data_root_dir,label="LM"):
     return training_data_files
 
 
+def fetch_training_data_portal_veins_files(data_root_dir,label):
+    data_path = data_root_dir +"/*/"
+    path = glob(data_path)
+    print(path)
+    training_data_files= list()
+    for i in xrange(len(path)):
+        data_path = glob(path[i]+ "PATIENT1.*.nii.gz")[0]
+        label_path = data_path.replace("PATIENT", label )
+        training_data_files.append(tuple([data_path, label_path]))
+    return training_data_files
+
+
+def convert_dicom_to_nify(label):
+    for i in range(1,21):
+        dicom2nifti.dicom_series_to_nifti("../3Dircadb1/3Dircadb1."+str(i)+"/LABELLED_DICOM", "../3Dircadb1/3Dircadb1."+str(i)+"/LABELLED1." + str(i) + ".nii.gz")
+    for i in range(1,21):
+        dicom2nifti.dicom_series_to_nifti("../3Dircadb1/3Dircadb1."+str(i)+"/PATIENT_DICOM", "../3Dircadb1/3Dircadb1."+str(i)+"/PATIENT1."+str(i) + ".nii.gz")
+    for i in range(1,21):
+        dicom2nifti.dicom_series_to_nifti("../3Dircadb1/3Dircadb1."+str(i)+"/MASKS_DICOM/"+label, "../3Dircadb1/3Dircadb1."+str(i)+"/"+ label+ "1." + str(i) +".nii.gz")
+
+
+
 def get_train_and_label_numpy(number_of_slices, train_list, label_list, channels=5):
     train_data = np.zeros((number_of_slices, train_list[0].shape[1], train_list[0].shape[2], channels))
     label_data = np.zeros((number_of_slices, label_list[0].shape[1], label_list[0].shape[2], 1))
@@ -229,14 +207,6 @@ def get_train_and_label_numpy(number_of_slices, train_list, label_list, channels
     return train_data, label_data
 
 
-def read_numpyarray_from_file(path):
-    image = sitk.ReadImage(path)
-    return sitk.GetArrayFromImage(image).astype('float32')
-
-def show_nii_image(path, slice_nr):
-    image = read_numpyarray_from_file(path)
-    plt.figure()
-    plt.imshow(image[slice_nr])
 
 #TODO make sure that index not out of bounds
 def get_prediced_image_of_test_files(args,files, number, tag):
@@ -244,13 +214,6 @@ def get_prediced_image_of_test_files(args,files, number, tag):
     print("Prediction on " + element[0])
     return get_slices(args,files[number:number+1], tag)
 
-
-
-# Assume to have some sitk image (itk_image) and label (itk_label)
-"""def get_data_files(data_root_dir, label="LM"):
-    files = fetch_training_data_ca_files(data_root_dir,label)
-    print("files: " + str(len(files)))
-    return split_train_val_test(files)"""
 
 
 def get_train_data_slices(args, train_files, tag = "LM"):
@@ -372,7 +335,12 @@ def from_patches_to_numpy(patches, shape):
 
 
 if __name__ == "__main__":
-    create_split('../st.Olav', 'both')
+    convert_dicom_to_nify("portalvein")
+    files = fetch_training_data_portal_veins_files("../3Dircadb1","portalvein")
+    numpy_image, numpy_label = get_preprossed_numpy_arrays_from_file(files[0][0], files[0][1])
+    print(numpy_image.shape, numpy_label.shape)
+    #convert_dicom_to_nify(files[0])
+    #create_split('../st.Olav', 'both')
     #get_data_files("../st.Olav", label="both")
     #train_files, val, test = get_train_val_test("both")
     #pred, lab = get_prediced_image_of_test_files(test, 0, "both")
