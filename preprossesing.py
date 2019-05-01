@@ -15,7 +15,7 @@ from keras.utils import to_categorical
 from skimage.transform import resize
 from sklearn.model_selection import train_test_split
 import nibabel as nib
-import dicom2nifti
+#import dicom2nifti
 #from augmentation import dataaug
 
 
@@ -182,13 +182,13 @@ def fetch_training_data_portal_veins_files(data_root_dir,label):
     return training_data_files
 
 
-def convert_dicom_to_nify(label):
+"""def convert_dicom_to_nify(label):
     for i in range(1,21):
         dicom2nifti.dicom_series_to_nifti("../3Dircadb1/3Dircadb1."+str(i)+"/LABELLED_DICOM", "../3Dircadb1/3Dircadb1."+str(i)+"/LABELLED1." + str(i) + ".nii.gz")
     for i in range(1,21):
         dicom2nifti.dicom_series_to_nifti("../3Dircadb1/3Dircadb1."+str(i)+"/PATIENT_DICOM", "../3Dircadb1/3Dircadb1."+str(i)+"/PATIENT1."+str(i) + ".nii.gz")
     for i in range(1,21):
-        dicom2nifti.dicom_series_to_nifti("../3Dircadb1/3Dircadb1."+str(i)+"/MASKS_DICOM/"+label, "../3Dircadb1/3Dircadb1."+str(i)+"/"+ label+ "1." + str(i) +".nii.gz")
+        dicom2nifti.dicom_series_to_nifti("../3Dircadb1/3Dircadb1."+str(i)+"/MASKS_DICOM/"+label, "../3Dircadb1/3Dircadb1."+str(i)+"/"+ label+ "1." + str(i) +".nii.gz")"""
 
 
 
@@ -273,9 +273,9 @@ def get_patches(image_numpy, label_numpy, remove_only_background_patches=False):
     #print(mask_padded.shape)
     #print(label_numpy.shape)
     mask_padded[0:image_numpy.shape[0], 0:image_numpy.shape[1], 0:image_numpy.shape[2]] = label_numpy
-    for z in xrange(64, image_numpy_padded.shape[0],64):
-        for y in xrange(64, image_numpy_padded.shape[1],64):
-            for x in xrange(64,image_numpy_padded.shape[2],64):
+    for z in range(64, image_numpy_padded.shape[0] + 1,64):
+        for y in range(64, image_numpy_padded.shape[1]+1,64):
+            for x in range(64,image_numpy_padded.shape[2]+1,64):
                 mask_patch = mask_padded[z-64:z, y-64:y, x-64:x]
                 if remove_only_background_patches:
                     if np.all(mask_patch == 0):
@@ -317,9 +317,9 @@ def from_patches_to_numpy(patches, shape):
     print(reshape_patches.shape)
     image_numpy = np.zeros(shape[:-1])
     i = 0
-    for z in xrange(64, shape[0],64):
-        for y in xrange(64, shape[1],64):
-            for x in xrange(64, shape[2],64):
+    for z in range(64, shape[0]+1,64):
+        for y in range(64, shape[1]+1,64):
+            for x in range(64, shape[2]+1,64):
                 image_numpy[z-64:z, y-64:y, x-64:x] = reshape_patches[i]
                 i += 1
     if(i != patches.shape[0]):
@@ -335,7 +335,7 @@ def from_patches_to_numpy(patches, shape):
 
 
 if __name__ == "__main__":
-    convert_dicom_to_nify("portalvein")
+    #convert_dicom_to_nify("portalvein")
     files = fetch_training_data_portal_veins_files("../3Dircadb1","portalvein")
     numpy_image, numpy_label = get_preprossed_numpy_arrays_from_file(files[0][0], files[0][1])
     print(numpy_image.shape, numpy_label.shape)

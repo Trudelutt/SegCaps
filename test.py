@@ -56,8 +56,13 @@ def remove_noise(raw_output):
         if props[0].area / props[1].area > 5:  # if the largest is way larger than the second largest
             thresholded_mask[all_labels == props[0].label] = 1  # only turn on the largest component
         else:
-            thresholded_mask[all_labels == props[0].label] = 1  # turn on two largest components
-            thresholded_mask[all_labels == props[1].label] = 1
+            for i in range(len(props)):
+                #print(props[i].area)
+                if props[i].area > 500:
+                    thresholded_mask[all_labels == props[i].label] = 1
+
+            #thresholded_mask[all_labels == props[0].label] = 1  # turn on two largest components
+            #thresholded_mask[all_labels == props[1].label] = 1
     elif len(props):
         thresholded_mask[all_labels == props[0].label] = 1
 
@@ -67,12 +72,56 @@ def remove_noise(raw_output):
 
 def create_and_write_viz_nii(name, meta_sitk, pred, gt):
     print("Write viz nii file...")
-    pred[pred > 0.] = 2.
-    vis_image = gt + pred
+    predtion_copy = np.copy(pred)
+    predtion_copy[predtion_copy > 0.] = 2.
+    vis_image = gt + predtion_copy
     viz_sitk = sitk.GetImageFromArray(vis_image)
     viz_sitk.CopyInformation(meta_sitk)
     sitk.WriteImage(viz_sitk, name)
     print("Done write viz nii file...")
+    vis_rgb = create_rgb_viz(vis_image)
+    return vis_rgb
+
+def create_rgb_viz(vis_image):
+    vis_rgb = np.zeros((np.concatenate((vis_image.shape, (3,)))))
+    vis_copy = np.copy(vis_image)
+    vis_rgb[:,:,:,0][vis_copy == 1] = 1
+    vis_rgb[:,:,:,1][vis_copy == 2] = 1
+    vis_rgb[:,:,:,2][vis_copy == 3] = 1
+    #print(np.unique(vis_rgb[:,:,:,2]))
+    return vis_rgb
+
+
+
+def creat_qual_figure(img_data, predtion, fig_out_dir, img_path):
+        # Plot Qual Figure
+        print('Creating Qualitative Figure for Quick Reference')
+        f, ax = plt.subplots(1, 3, figsize=(15, 5))
+
+        ax[0].imshow(img_data[img_data.shape[0] // 3, :, :], alpha=1, cmap='gray')
+        ax[0].imshow(predtion[img_data.shape[0] // 3, :, :], alpha=0.2, cmap='gray')
+        #ax[0].imshow(gt_data[img_data.shape[0] // 3, :, :], alpha=0.2, cmap='Reds')
+        ax[0].set_title('Slice {}/{}'.format(img_data.shape[0] // 3, img_data.shape[0]))
+        ax[0].axis('off')
+
+        ax[1].imshow(img_data[img_data.shape[0] // 2, :, :], alpha=1, cmap='gray')
+        ax[1].imshow(predtion[img_data.shape[0] // 2, :, :], alpha=0.2, cmap='gray')
+        #ax[1].imshow(gt_data[img_data.shape[0] // 2, :, :], alpha=0.2, cmap='Reds')
+        ax[1].set_title('Slice {}/{}'.format(img_data.shape[0] // 2, img_data.shape[0]))
+        ax[1].axis('off')
+
+        ax[2].imshow(img_data[img_data.shape[0] // 2 + img_data.shape[0] // 4, :, :], alpha=1, cmap='gray')
+        ax[2].imshow(predtion[img_data.shape[0] // 2 + img_data.shape[0] // 4, :, :], alpha=0.2, cmap='gray')
+        ax[2].set_title(
+            'Slice {}/{}'.format(img_data.shape[0] // 2 + img_data.shape[0] // 4, img_data.shape[0]))
+        ax[2].axis('off')
+
+        fig = plt.gcf()
+        fig.suptitle(basename(img_path[1][:-7]))
+
+        plt.savefig(join(fig_out_dir, basename(img_path[1][:-7]) + '_qual_fig' + '.png'),
+                    format='png', bbox_inches='tight')
+        plt.close('all')
 
 def test(args, test_list, model_list, net_input_shape):
     if args.weights_path == '':
@@ -187,53 +236,29 @@ def test(args, test_list, model_list, net_input_shape):
             output_img = sitk.GetImageFromArray(output)
             print('Segmenting Output')
             threshold_output = threshold_mask(output, args.thresh_level)
+            output_raw_mask = sitk.GetImageFromArray(threshold_output)
             output_bin = remove_noise(threshold_output)
             output_mask = sitk.GetImageFromArray(output_bin)
 
             output_img.CopyInformation(sitk_img)
+            output_raw_mask.CopyInformation(sitk_img)
             output_mask.CopyInformation(sitk_img)
 
+
             print('Saving Output')
-            sitk.WriteImage(output_img, join(raw_out_dir, basename(img[1][:-7]) + '_raw_output' + img[1][-7:]))
+            sitk.WriteImage(output_raw_mask, join(raw_out_dir, basename(img[1][:-7]) + '_raw_output' + img[1][-7:]))
             sitk.WriteImage(output_mask, join(fin_out_dir, basename(img[1][:-7]) + '_final_output' + img[1][-7:]))
 
             # Load gt mask
             #TODO change to get correcr mask name
             sitk_mask = sitk.ReadImage(img[1])
             gt_data = sitk.GetArrayFromImage(sitk_mask)
-            create_and_write_viz_nii(join(raw_out_dir, basename(img[1][:-7]) + '_final_output_viz' + img[1][-7:]), sitk_img, output_bin, gt_data)
-            create_and_write_viz_nii(join(raw_out_dir, basename(img[1][:-7]) + '_raw_output_viz' + img[1][-7:]), sitk_img,threshold_output , gt_data)
-            # Plot Qual Figure
-            print('Creating Qualitative Figure for Quick Reference')
-            f, ax = plt.subplots(1, 3, figsize=(15, 5))
+            post_prediction = create_and_write_viz_nii(join(raw_out_dir, basename(img[1][:-7]) + '_final_output_viz' + img[1][-7:]), sitk_img, output_bin, gt_data)
+            raw_prediction = create_and_write_viz_nii(join(raw_out_dir, basename(img[1][:-7]) + '_raw_output_viz' + img[1][-7:]), sitk_img,threshold_output , gt_data)
 
-            ax[0].imshow(img_data[img_data.shape[0] // 3, :, :], alpha=1, cmap='gray')
-            ax[0].imshow(output_bin[img_data.shape[0] // 3, :, :], alpha=0.5, cmap='Blues')
-            ax[0].imshow(gt_data[img_data.shape[0] // 3, :, :], alpha=0.2, cmap='Reds')
-            ax[0].set_title('Slice {}/{}'.format(img_data.shape[0] // 3, img_data.shape[0]))
-            ax[0].axis('off')
 
-            ax[1].imshow(img_data[img_data.shape[0] // 2, :, :], alpha=1, cmap='gray')
-            ax[1].imshow(output_bin[img_data.shape[0] // 2, :, :], alpha=0.5, cmap='Blues')
-            ax[1].imshow(gt_data[img_data.shape[0] // 2, :, :], alpha=0.2, cmap='Reds')
-            ax[1].set_title('Slice {}/{}'.format(img_data.shape[0] // 2, img_data.shape[0]))
-            ax[1].axis('off')
+            creat_qual_figure(img_data, raw_prediction, fig_out_dir , img)
 
-            ax[2].imshow(img_data[img_data.shape[0] // 2 + img_data.shape[0] // 4, :, :], alpha=1, cmap='gray')
-            ax[2].imshow(output_bin[img_data.shape[0] // 2 + img_data.shape[0] // 4, :, :], alpha=0.5,
-                         cmap='Blues')
-            ax[2].imshow(gt_data[img_data.shape[0] // 2 + img_data.shape[0] // 4, :, :], alpha=0.2,
-                         cmap='Reds')
-            ax[2].set_title(
-                'Slice {}/{}'.format(img_data.shape[0] // 2 + img_data.shape[0] // 4, img_data.shape[0]))
-            ax[2].axis('off')
-
-            fig = plt.gcf()
-            fig.suptitle(img[0][:-7])
-
-            plt.savefig(join(fig_out_dir, basename(img[1][:-7]) + '_qual_fig' + '.png'),
-                        format='png', bbox_inches='tight')
-            plt.close('all')
             row = [img[0][:-7]]
             if args.compute_dice:
                 print('Computing Dice')

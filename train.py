@@ -65,7 +65,7 @@ def get_callbacks(arguments):
                                        verbose=1, mode='min')
     lr_reducer = ReduceLROnPlateau(monitor=monitor_name, factor=0.05, cooldown=0, patience=5,verbose=1, mode='min')
     #Code had orginally patience 25
-    early_stopper = EarlyStopping(monitor=monitor_name, min_delta=0, patience=12, verbose=0, mode='min')
+    early_stopper = EarlyStopping(monitor=monitor_name, min_delta=0, patience=25, verbose=0, mode='min')
 
     return [model_checkpoint, csv_logger, lr_reducer, early_stopper, tb]
 
