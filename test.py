@@ -56,13 +56,14 @@ def remove_noise(raw_output):
         if props[0].area / props[1].area > 5:  # if the largest is way larger than the second largest
             thresholded_mask[all_labels == props[0].label] = 1  # only turn on the largest component
         else:
-            for i in range(len(props)):
-                #print(props[i].area)
-                if props[i].area > 500:
-                    thresholded_mask[all_labels == props[i].label] = 1
-
-            #thresholded_mask[all_labels == props[0].label] = 1  # turn on two largest components
-            #thresholded_mask[all_labels == props[1].label] = 1
+            if props[1].area / props[2].area > 5:
+                thresholded_mask[all_labels == props[0].label] = 1  # turn on two largest components
+                thresholded_mask[all_labels == props[1].label] = 1
+            else:
+                for i in range(len(props)):
+                    #print(props[i].area)
+                    if props[i].area > 500:
+                        thresholded_mask[all_labels == props[i].label] = 1
     elif len(props):
         thresholded_mask[all_labels == props[0].label] = 1
 
@@ -117,9 +118,14 @@ def creat_qual_figure(img_data, predtion, fig_out_dir, img_path):
         ax[2].axis('off')
 
         fig = plt.gcf()
-        fig.suptitle(basename(img_path[1][:-7]))
+        title = basename(img_path[1][:-7]).split("_Seg")[0]
+        if "Frangi" in img_path[1]:
+            title += "_Frangi"
+        if "post" in img_path[1]:
+            title += "_post"
+        fig.suptitle(title)
 
-        plt.savefig(join(fig_out_dir, basename(img_path[1][:-7]) + '_qual_fig' + '.png'),
+        plt.savefig(join(fig_out_dir, basename(img_path[0][:-7]) + '_qual_fig' + '.png'),
                     format='png', bbox_inches='tight')
         plt.close('all')
 
@@ -258,6 +264,14 @@ def test(args, test_list, model_list, net_input_shape):
 
 
             creat_qual_figure(img_data, raw_prediction, fig_out_dir , img)
+            creat_qual_figure(img_data, post_prediction, fig_out_dir ,  (img[0].replace('CCTA', 'CCTA_post'), img[1].replace(args.label, args.label + '_post')))
+            if args.frangi_mode == "frangi_comb":
+                sitk_frangi = sitk.ReadImage(img[0].replace('CCTA', 'CCTA_Frangi'))
+                frangi_data = sitk.GetArrayFromImage(sitk_frangi)
+                creat_qual_figure(frangi_data, raw_prediction, fig_out_dir , (img[0].replace('CCTA', 'CCTA_Frangi'), img[1].replace(args.label, args.label + '_Frangi')))
+                creat_qual_figure(frangi_data, post_prediction, fig_out_dir , (img[0].replace('CCTA', 'CCTA_Frangi_post'), img[1].replace(args.label, args.label + '_Frangi_post')))
+
+
 
             row = [img[0][:-7]]
             if args.compute_dice:

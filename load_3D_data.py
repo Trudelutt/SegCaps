@@ -391,7 +391,7 @@ def generate_train_batches(args, label,root_path, train_list, net_input_shape, n
                     train_mask = data['mask']
             except:
                 print('\nPre-made numpy array not found for {}.\nCreating now...'.format(path_to_np))
-                train_img, train_mask = convert_data_to_numpy(args, label, scan_name, numpy_subfolder_path, train=True)
+                train_img, train_mask = convert_data_to_numpy(args, label, scan_name, numpy_subfolder_path, train=False)
                 if np.array_equal(train_img,np.zeros(1)):
                     continue
                 else:
@@ -415,8 +415,8 @@ def generate_train_batches(args, label,root_path, train_list, net_input_shape, n
                     mask_batch[count, :, :, :] = train_mask[j:j+1,...]
                 elif img_batch.ndim == 5:
                     # Assumes img and mask are single channel. Replace 0 with : if multi-channel.
-                    img_batch[count, :, :, :, :] = train_img[j:j+1, ...]
-                    mask_batch[count, :, :, :, :] = train_mask[j:j+1,...]
+                    img_batch[count, :, :, :, :] = train_img[j:j+1, :,:,:,:]
+                    mask_batch[count, :, :, :, :] = train_mask[j:j+1,:,:,:,:]
                 else:
                     print('Error this function currently only supports 2D and 3D data.')
                     exit(0)
@@ -501,8 +501,8 @@ def generate_val_batches(args, label, root_path, val_list, net_input_shape, net,
                     mask_batch[count, :, :, :] = val_mask[j:j+1,...]
                 elif img_batch.ndim == 5:
                     # Assumes img and mask are single channel. Replace 0 with : if multi-channel.
-                    img_batch[count, :, :, :, :] = val_img[j:j+1, ...]
-                    mask_batch[count, :, :, :, :] = val_mask[j:j+1,...]
+                    img_batch[count, :, :, :, :] = val_img[j:j+1, :,:,:,:]
+                    mask_batch[count, :, :, :, :] = val_mask[j:j+1, :,:,:,:]
                 else:
                     print('Error this function currently only supports 2D and 3D data.')
                     exit(0)
@@ -585,7 +585,7 @@ def generate_test_batches(args, label, root_path, test_list, net_input_shape, ba
                # mask_batch[count, :, :, :] = test_mask[j:j+1,...]
             elif img_batch.ndim == 5:
                 # Assumes img and mask are single channel. Replace 0 with : if multi-channel.
-                img_batch[count, :, :, :, :] = test_img[j:j+1, ...]
+                img_batch[count, :, :, :, :] = test_img[j:j+1, :,:,:,:]
                # mask_batch[count, :, :, :, :] = test_mask[j:j+1,...]
             else:
                 print('Error this function currently only supports 2D and 3D data.')
