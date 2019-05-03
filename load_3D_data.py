@@ -183,7 +183,8 @@ def load_data(label, split_nr=0):
 def convert_data_to_numpy(args, label, img_name, np_subfolder_path, no_masks=False, overwrite=False,train=False):
     print("Converting numpy")
     fname = basename(img_name[:-7])
-    numpy_path = 'np_files'
+    numpy_path = args.out_dir_save
+    numpy_path += 'np_files'
     if "st.Olav" in img_name:
         img_path = img_name.replace(label,"CCTA")
     elif "3Dircadb1" in img_name:
@@ -378,6 +379,8 @@ def generate_train_batches(args, label,root_path, train_list, net_input_shape, n
     elif args.frangi_mode == 'frangi_mask':
         numpy_subfolder_path += '_Frangi_mask'
 
+    numpy_path = args.out_dir_save
+    numpy_path += 'np_files'
     while True:
         if shuff:
             shuffle(train_list)
@@ -385,13 +388,13 @@ def generate_train_batches(args, label,root_path, train_list, net_input_shape, n
         for i, scan_name in enumerate(train_list):
             try:
                 scan_name = scan_name[1]
-                path_to_np = join('np_files', numpy_subfolder_path, basename(scan_name)[:-7]+'.npz')
+                path_to_np = join(numpy_path, numpy_subfolder_path, basename(scan_name)[:-7]+'.npz')
                 with np.load(path_to_np) as data:
                     train_img = data['img']
                     train_mask = data['mask']
             except:
                 print('\nPre-made numpy array not found for {}.\nCreating now...'.format(path_to_np))
-                train_img, train_mask = convert_data_to_numpy(args, label, scan_name, numpy_subfolder_path, train=False)
+                train_img, train_mask = convert_data_to_numpy(args, label, scan_name, numpy_subfolder_path, train=args.remove_only_background)
                 if np.array_equal(train_img,np.zeros(1)):
                     continue
                 else:
@@ -468,7 +471,8 @@ def generate_val_batches(args, label, root_path, val_list, net_input_shape, net,
         numpy_subfolder_path += '_Frangi_comb'
     elif args.frangi_mode == 'frangi_mask':
         numpy_subfolder_path += '_Frangi_mask'
-
+    numpy_path = args.out_dir_save
+    numpy_path += 'np_files'
     while True:
         if shuff:
             shuffle(val_list)
@@ -476,7 +480,7 @@ def generate_val_batches(args, label, root_path, val_list, net_input_shape, net,
         for i, scan_name in enumerate(val_list):
             try:
                 scan_name = scan_name[1]
-                path_to_np = join('np_files', numpy_subfolder_path, basename(scan_name)[:-7]+'.npz')
+                path_to_np = join(numpy_path, numpy_subfolder_path, basename(scan_name)[:-7]+'.npz')
                 print(path_to_np)
                 with np.load(path_to_np) as data:
                     val_img = data['img']
@@ -558,11 +562,13 @@ def generate_test_batches(args, label, root_path, test_list, net_input_shape, ba
         numpy_subfolder_path += '_Frangi_comb'
     elif args.frangi_mode == 'frangi_mask':
         numpy_subfolder_path += '_Frangi_mask'
+    numpy_path = args.out_dir_save
+    numpy_path += 'np_files'
     count = 0
     for i, scan_name in enumerate(test_list):
         try:
             scan_name = scan_name[1]
-            path_to_np = join('np_files', numpy_subfolder_path, basename(scan_name)[:-7]+'.npz')
+            path_to_np = join(numpy_path, numpy_subfolder_path, basename(scan_name)[:-7]+'.npz')
             with np.load(path_to_np) as data:
                 test_img = data['img']
         except:

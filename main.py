@@ -111,6 +111,8 @@ if __name__ == '__main__':
                         help='The root directory for your data.')
     parser.add_argument('--weights_path', type=str, default='',
                         help='/path/to/trained_model.hdf5 from root. Set to "" for none.')
+    parser.add_argument('--out_dir_save', type=str, default='',
+                        help='/path/to/save_dir from root. Set to "" for none.')
     parser.add_argument('--net', type=str.lower, default='segcapsr3',
                         choices=['segcapsr3', 'segcapsr1', 'segcapsbasic', 'unet','bvnet', 'tiramisu', 'bvnet3d'],
                         help='Choose your network.')
@@ -118,6 +120,8 @@ if __name__ == '__main__':
                         help='Set to 1 to enable training.')
     parser.add_argument('--test', type=int, default=1, choices=[0,1],
                         help='Set to 1 to enable testing.')
+    parser.add_argument('--remove_only_background', type=int, default=1, choices=[0,1],
+                        help='Set to 1 to enable remove_only_background.')
     parser.add_argument('--manip', type=int, default=0, choices=[0,1],
                         help='Set to 1 to enable manipulation.')
     parser.add_argument('--frangi_mode', type=str, default=None, choices=[None,'frangi_input', 'frangi_comb', 'frangi_mask'],

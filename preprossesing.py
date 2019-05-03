@@ -86,7 +86,7 @@ def get_preprossed_numpy_arrays_from_file(image_path, label_path):
         frangi_with_threshold = np.zeros(numpy_label.shape)
         frangi_with_threshold[np.where(numpy_label > 1)] = 1.0
         #print("it is suposed to be binary now")
-        #print(np.unique(frangi_with_threshold))
+        print(np.unique(frangi_with_threshold))
         #frangi_sitk = sitk.GetImageFromArray(frangi_with_threshold)
         #frangi_sitk.CopyInformation(sitk_image)
         #sitk.WriteImage(frangi_sitk, join('logs','mask_test', image_path.split("/")[-1]))
