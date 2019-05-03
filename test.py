@@ -158,10 +158,11 @@ def test(args, test_list, model_list, net_input_shape):
         eval_model = model_list[1]
     else:
         eval_model = model_list[0]
-    try:
+    """try:
         eval_model.load_weights(weights_path)
     except:
-        print('Unable to find weights path. Testing with random weights.')
+        print('Unable to find weights path. Testing with random weights.')"""
+    eval_model.load_weights(weights_path)
     print_summary(model=eval_model, positions=[.38, .65, .75, 1.])
 
     # Set up placeholders
@@ -227,7 +228,6 @@ def test(args, test_list, model_list, net_input_shape):
                                                         steps=num_slices, max_queue_size=1, workers=1,
                                                         use_multiprocessing=False, verbose=1)
 
-
             if args.net.find('caps') != -1:
                 output = output_array[0][:,:,:,0]
                 #recon = output_array[1][:,:,:,0]
@@ -259,6 +259,7 @@ def test(args, test_list, model_list, net_input_shape):
             #TODO change to get correcr mask name
             sitk_mask = sitk.ReadImage(img[1])
             gt_data = sitk.GetArrayFromImage(sitk_mask)
+            gt_data[gt_data == 255] = 1
             post_prediction = create_and_write_viz_nii(join(raw_out_dir, basename(img[1][:-7]) + '_final_output_viz' + img[1][-7:]), sitk_img, output_bin, gt_data)
             raw_prediction = create_and_write_viz_nii(join(raw_out_dir, basename(img[1][:-7]) + '_raw_output_viz' + img[1][-7:]), sitk_img,threshold_output , gt_data)
 
