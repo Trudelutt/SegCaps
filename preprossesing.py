@@ -73,11 +73,11 @@ def preprosses_images(image, label_data):
 
 
 def get_preprossed_numpy_arrays_from_file(image_path, label_path):
-    sitk_image  = sitk.ReadImage(image_path, sitk.sitkFloat32)
-    numpy_image = sitk.GetArrayFromImage(sitk_image)
-    sitk_label  = sitk.ReadImage(label_path )
-    numpy_label = sitk.GetArrayFromImage(sitk_label)
-    if not np.array_equal(np.unique(numpy_label), np.array([0.,1.])):
+    sitk_image  = sitk.ReadImage(image_path)
+    numpy_image = sitk.GetArrayFromImage(sitk_image).astype(np.float32)
+    sitk_label  = sitk.ReadImage(label_path,sitk.sitkUInt8 )
+    numpy_label = sitk.GetArrayFromImage(sitk_label).astype(np.uint8)
+    if not np.array_equal(np.unique(numpy_label), np.array([0,1])):
         #print("numpy is not binary mask")
         #numpy_label = numpy_label / np.max(numpy_label)
         #threshold = np.median(numpy_label)

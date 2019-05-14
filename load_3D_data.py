@@ -369,8 +369,8 @@ def threadsafe_generator(f):
 def generate_train_batches(args, label,root_path, train_list, net_input_shape, net, batchSize=1, numSlices=1, subSampAmt=-1,
                            stride=1, downSampAmt=1, shuff=1, aug_data=1):
     # Create placeholders for training
-    img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.float32)
-    mask_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.uint8)
+    img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape[:-1], (args.channels,)))), dtype=np.float32)
+    mask_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape[:-1], (1,)))), dtype=np.uint8)
     numpy_subfolder_path = str(args.split_nr)+'split_' + args.label +"_net_input_shape"+ str(net_input_shape).strip()  + "_stride" + str(args.stride)
     if args.frangi_mode== 'frangi_input':
         numpy_subfolder_path += "_Frangi_input"
@@ -406,20 +406,18 @@ def generate_train_batches(args, label,root_path, train_list, net_input_shape, n
                 subSampAmt = int(rand(1)*(train_img.shape[2]*0.05))"""
 
             indicies = np.arange(0, train_img.shape[0])
-            #if shuff:
-                #shuffle(indicies)
-
+            if shuff:
+                shuffle(indicies)
             for j in indicies:
                 #if not np.any(train_mask[:, :, j:j + numSlices * (subSampAmt+1):subSampAmt+1]):
                     #continue
                 if img_batch.ndim == 4:
-                    #print("train", train_img.shape)
-                    img_batch[count, ...] = train_img[j:j+1,...]
-                    mask_batch[count, :, :, :] = train_mask[j:j+1,...]
+                    img_batch[count,:,:,:] = train_img[j,:,:,:]
+                    mask_batch[count,:,:,:] = train_mask[j,:,:,:]
                 elif img_batch.ndim == 5:
                     # Assumes img and mask are single channel. Replace 0 with : if multi-channel.
-                    img_batch[count, :, :, :, :] = train_img[j:j+1, :,:,:,:]
-                    mask_batch[count, :, :, :, :] = train_mask[j:j+1,:,:,:,:]
+                    img_batch[count, :, :, :, :] = train_img[j, :, :, :, :]
+                    mask_batch[count, :, :, :, :] = train_mask[j, :, :, :, :]
                 else:
                     print('Error this function currently only supports 2D and 3D data.')
                     exit(0)
@@ -439,11 +437,8 @@ def generate_train_batches(args, label,root_path, train_list, net_input_shape, n
                         plt.savefig(join( 'logs', 'ex_train.png'), format='png', bbox_inches='tight')
                         plt.close()
                     if net.find('caps') != -1:
-                        temp = mask_batch*img_batch
-                        #print(temp.shape)
                         yield ([img_batch, mask_batch], [mask_batch, mask_batch*img_batch])
                     else:
-                        #print("else")
                         yield (img_batch, mask_batch)
 
         if count != 0:
@@ -451,19 +446,17 @@ def generate_train_batches(args, label,root_path, train_list, net_input_shape, n
                 img_batch[:count,...], mask_batch[:count,...] = augmentImages(img_batch[:count,...],
                                                                               mask_batch[:count,...])
             if net.find('caps') != -1:
-                #print("caps")
                 yield ([img_batch[:count, ...], mask_batch[:count, ...]],
                        [mask_batch[:count, ...], mask_batch[:count, ...] * img_batch[:count, ...]])
             else:
-                #print("LASt else")
                 yield (img_batch[:count,...], mask_batch[:count,...])
 
 @threadsafe_generator
 def generate_val_batches(args, label, root_path, val_list, net_input_shape, net, batchSize=1, numSlices=1, subSampAmt=-1,
                          stride=1, downSampAmt=1, shuff=1):
     # Create placeholders for validation
-    img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.float32)
-    mask_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.uint8)
+    img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape[:-1], (args.channels,)))), dtype=np.float32)
+    mask_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape[:-1], (1,)))), dtype=np.uint8)
     numpy_subfolder_path =  str(args.split_nr)+'split_' + args.label +"_net_input_shape"+ str(net_input_shape).strip()  + "_stride" + str(args.stride)
     if args.frangi_mode== 'frangi_input':
         numpy_subfolder_path += "_Frangi_input"
@@ -493,20 +486,18 @@ def generate_val_batches(args, label, root_path, val_list, net_input_shape, net,
                 else:
                     print('\nFinished making npz file.')
             indicies = np.arange(0, val_img.shape[0])
-            #if shuff:
-                #shuffle(indicies)
-
+            if shuff:
+                shuffle(indicies)
             for j in indicies:
             #if not np.any(val_mask[:, :, j:j + numSlices * (subSampAmt+1):subSampAmt+1]):
                     #continue
                 if img_batch.ndim == 4:
-                    #print("train", train_img.shape)
-                    img_batch[count, ...] = val_img[j:j+1,...]
-                    mask_batch[count, :, :, :] = val_mask[j:j+1,...]
+                    img_batch[count,:,:,:] = val_img[j,:,:,:]
+                    mask_batch[count,:,:,:] = val_mask[j,:,:,:]
                 elif img_batch.ndim == 5:
                     # Assumes img and mask are single channel. Replace 0 with : if multi-channel.
-                    img_batch[count, :, :, :, :] = val_img[j:j+1, :,:,:,:]
-                    mask_batch[count, :, :, :, :] = val_mask[j:j+1, :,:,:,:]
+                    img_batch[count, :, :, :, :] = val_img[j, :, :, :, :]
+                    mask_batch[count, :, :, :, :] = val_mask[j, :, :, :, :]
                 else:
                     print('Error this function currently only supports 2D and 3D data.')
                     exit(0)
@@ -554,7 +545,7 @@ def generate_val_batches(args, label, root_path, val_list, net_input_shape, net,
 def generate_test_batches(args, label, root_path, test_list, net_input_shape, batchSize=1, numSlices=1, subSampAmt=0,
                           stride=1, downSampAmt=1, shuff=0):
     # Create placeholders for testing
-    img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape))), dtype=np.float32)
+    img_batch = np.zeros((np.concatenate(((batchSize,), net_input_shape[:-1], (args.channels,)))), dtype=np.float32)
     numpy_subfolder_path = str(args.split_nr)+'split_' + args.label +"_net_input_shape"+ str(net_input_shape).strip()  + "_stride" + str(args.stride)
     if args.frangi_mode== 'frangi_input':
         numpy_subfolder_path += "_Frangi_input"
@@ -579,20 +570,17 @@ def generate_test_batches(args, label, root_path, test_list, net_input_shape, ba
             else:
                 print('\nFinished making npz file.')
         indicies = np.arange(0, test_img.shape[0])
-        if shuff:
-            shuffle(indicies)
+        #if shuff:
+            #shuffle(indicies)
 
         for j in indicies:
             #if not np.any(train_mask[:, :, j:j + numSlices * (subSampAmt+1):subSampAmt+1]):
             #    continue
             if img_batch.ndim == 4:
-                #print("train", train_img.shape)
-                img_batch[count, ...] = test_img[j:j+1,...]
-               # mask_batch[count, :, :, :] = test_mask[j:j+1,...]
+                img_batch[count, :, :, :] = test_img[j, :, :, :]
             elif img_batch.ndim == 5:
                 # Assumes img and mask are single channel. Replace 0 with : if multi-channel.
-                img_batch[count, :, :, :, :] = test_img[j:j+1, :,:,:,:]
-               # mask_batch[count, :, :, :, :] = test_mask[j:j+1,...]
+                img_batch[count, :, :, :, :] = test_img[j, :, :, :, :]
             else:
                 print('Error this function currently only supports 2D and 3D data.')
                 exit(0)

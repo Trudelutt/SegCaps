@@ -36,7 +36,10 @@ def get_loss(split, net, recon_wei, choice, label):
     elif choice == 'bce':
         loss = 'binary_crossentropy'
     elif choice == 'dice':
-        loss = dice_loss
+        if net =='bvnet3d':
+            loss = dice_loss(axis[1,2,3,4])
+        else:
+            loss = dice_loss
     elif choice == 'w_mar':
         pos_class_weight = load_class_weights( split=split, label=label)
         loss = margin_loss(margin=0.4, downweight=0.5, pos_weight=pos_class_weight)
@@ -75,7 +78,10 @@ def compile_model(args, net_input_shape, uncomp_model):
     if args.net.find('caps') != -1:
         metrics = {'out_seg': dice_hard}
     else:
-        metrics = [dice_hard]
+        if args.net == 'bvnet3d':
+            metrics = [dice_hard(axis=(1,2,3,4))]
+        else:
+            metrics = [dice_hard]
 
     loss, loss_weighting = get_loss( split=args.split_nr, net=args.net,
                                     recon_wei=args.recon_wei, choice=args.loss, label=args.label)
@@ -143,11 +149,11 @@ def train(args, train_list, val_list, u_model, net_input_shape):
                                batchSize=args.batch_size, numSlices=args.slices, subSampAmt=args.subsamp,
                                stride=args.stride, shuff=args.shuffle_data, aug_data=args.aug_data),
         max_queue_size=40, workers=4, use_multiprocessing=False,
-        steps_per_epoch=np.ceil(200*len(train_list)/args.batch_size),
+        steps_per_epoch=np.ceil(250*len(train_list)/args.batch_size),
         validation_data=generate_val_batches(args, args.label, args.data_root_dir, val_list, net_input_shape, net=args.net,
                                              batchSize=1,  numSlices=args.slices, subSampAmt=0,
                                              stride=20, shuff=args.shuffle_data),
-        validation_steps=(300*len(val_list)), # Set validation stride larger to see more of the data.
+        validation_steps=(250*len(val_list)), # Set validation stride larger to see more of the data.
         epochs=500,
         callbacks=callbacks,
         verbose=1)
