@@ -258,30 +258,56 @@ def get_slices(args, files, tag="LM"):
 
 
 
+def get_predict_patches(image_numpy, label_numpy):
+    image_patch_list = []
+    label_patch_list = []
+    orginal_shape = image_numpy.shape
+    padded_shape_z, padded_shape_y, padded_shape_x = orginal_shape
+    if not orginal_shape[0] % 64 == 0:
+        padded_shape_z = orginal_shape[0] + 64 - (orginal_shape[0] % 64)
+    if not orginal_shape[1] % 64 == 0:
+        padded_shape_y = orginal_shape[1] + 64 - (orginal_shape[1] % 64)
+    if not orginal_shape[2] % 64 == 0:
+        padded_shape_x = orginal_shape[2] + 64 - (orginal_shape[2] % 64)
+
+    image_numpy_padded = np.zeros((padded_shape_z, padded_shape_y, padded_shape_x))
+    image_numpy_padded[0:image_numpy.shape[0], 0:image_numpy.shape[1], 0:image_numpy.shape[2]] = image_numpy
+    mask_padded = np.zeros((image_numpy_padded.shape[0], image_numpy_padded.shape[1], image_numpy_padded.shape[2], 1))
+    mask_padded[0:image_numpy.shape[0], 0:image_numpy.shape[1], 0:image_numpy.shape[2]] = label_numpy
+    for z in range(0, image_numpy_padded.shape[0],64):
+        for y in range(0, image_numpy_padded.shape[1],64):
+            for x in range(0,image_numpy_padded.shape[2],64):
+                image_patch_list.append(image_numpy_padded[z:z+64, y:y+64, x:x+64])
+                label_patch_list.append((mask_padded[z:z+64, y:y+64, x:x+64], (z, z+64, y, y+64, x, x+64)))
+    image_patch = np.array(image_patch_list)
+    new_shape = (image_patch.shape[0], image_patch.shape[1], image_patch.shape[2], image_patch.shape[3], 1)
+    return image_patch.reshape(new_shape), label_patch_list, mask_padded.shape
+
 
 def get_patches(image_numpy, label_numpy, remove_only_background_patches=False):
     image_patch_list = []
     label_patch_list = []
     orginal_shape = image_numpy.shape
-    #print(orginal_shape)
-    #print(orginal_shape)
-    image_numpy_padded = np.zeros((orginal_shape[0] + (orginal_shape[0] % 64), orginal_shape[1] + (orginal_shape[1] % 64), orginal_shape[2] + (orginal_shape[2] % 64)))
-    #print(image_numpy_padded.shape)
+    padded_shape_z, padded_shape_y, padded_shape_x = orginal_shape
+    if not orginal_shape[0] % 64 == 0:
+        padded_shape_z = orginal_shape[0] + 64 - (orginal_shape[0] % 64)
+    if not orginal_shape[1] % 64 == 0:
+        padded_shape_y = orginal_shape[1] + 64 - (orginal_shape[1] % 64)
+    if not orginal_shape[2] % 64 == 0:
+        padded_shape_x = orginal_shape[2] + 64 - (orginal_shape[2] % 64)
+
+    image_numpy_padded = np.zeros((padded_shape_z, padded_shape_y, padded_shape_x))
     image_numpy_padded[0:image_numpy.shape[0], 0:image_numpy.shape[1], 0:image_numpy.shape[2]] = image_numpy
-    #print(image_numpy_padded.shape)
     mask_padded = np.zeros((image_numpy_padded.shape[0], image_numpy_padded.shape[1], image_numpy_padded.shape[2], 1))
-    #print(mask_padded.shape)
-    #print(label_numpy.shape)
     mask_padded[0:image_numpy.shape[0], 0:image_numpy.shape[1], 0:image_numpy.shape[2]] = label_numpy
-    for z in range(64, image_numpy_padded.shape[0] + 1,64):
-        for y in range(64, image_numpy_padded.shape[1]+1,64):
-            for x in range(64,image_numpy_padded.shape[2]+1,64):
-                mask_patch = mask_padded[z-64:z, y-64:y, x-64:x]
+    for z in range(0, image_numpy_padded.shape[0],64):
+        for y in range(0, image_numpy_padded.shape[1],64):
+            for x in range(0,image_numpy_padded.shape[2],64):
                 if remove_only_background_patches:
-                    if np.all(mask_patch == 0):
+                    if np.array_equal(np.unique(mask_padded[z:z+64, y:y+64, x:x +64]), np.array([0])):
                         continue
-                image_patch_list.append(image_numpy_padded[z-64:z, y-64:y, x-64:x])
-                label_patch_list.append(mask_patch)
+                image_patch_list.append(image_numpy_padded[z:z+64, y:y+64, x:x+64])
+                label_patch_list.append(mask_padded[z:z+64, y:y+64, x:x+64])
     return image_patch_list, label_patch_list, mask_padded.shape
 
 
@@ -291,7 +317,6 @@ def get_training_patches(train_files, label = "LM", remove_only_background_patch
     count = 1
     with tqdm(total=len(train_files), desc='Adds patches  from image ' + str(count) +"/" + str(len(train_files))) as t:
         for element in train_files:
-            #print(element[0])
             numpy_image, numpy_label = get_preprossed_numpy_arrays_from_file(element[0], element[1])
             img_patch, mask_patch, padded_shape  = get_patches(numpy_image, numpy_label, remove_only_background_patches)
             training_patches.extend(img_patch)
@@ -317,11 +342,12 @@ def from_patches_to_numpy(patches, shape):
     print(reshape_patches.shape)
     image_numpy = np.zeros(shape[:-1])
     i = 0
-    for z in range(64, shape[0]+1,64):
-        for y in range(64, shape[1]+1,64):
-            for x in range(64, shape[2]+1,64):
-                image_numpy[z-64:z, y-64:y, x-64:x] = reshape_patches[i]
+    for z in range(0, shape[0],64):
+        for y in range(0, shape[1],64):
+            for x in range(0, shape[2],64):
+                image_numpy[z:z+64, y:y+64, x:x+64] = reshape_patches[i]
                 i += 1
+                #print(z,y,x, i)
     if(i != patches.shape[0]):
         print("something is wrong with the patches to numpy converting")
         print(i, patches.shape[0])

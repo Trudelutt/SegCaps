@@ -25,7 +25,7 @@ from keras.utils.training_utils import multi_gpu_model
 from keras.callbacks import ModelCheckpoint, CSVLogger, EarlyStopping, ReduceLROnPlateau, TensorBoard
 import tensorflow as tf
 
-from custom_losses import dice_hard, weighted_binary_crossentropy_loss, dice_loss, margin_loss
+from custom_losses import dice_hard, dice3d_hard, weighted_binary_crossentropy_loss, dice_loss, margin_loss, dice3d_loss
 from load_3D_data import load_class_weights, generate_train_batches, generate_val_batches
 
 
@@ -37,7 +37,7 @@ def get_loss(split, net, recon_wei, choice, label):
         loss = 'binary_crossentropy'
     elif choice == 'dice':
         if net =='bvnet3d':
-            loss = dice_loss(axis[1,2,3,4])
+            loss = dice3d_loss
         else:
             loss = dice_loss
     elif choice == 'w_mar':
@@ -79,7 +79,7 @@ def compile_model(args, net_input_shape, uncomp_model):
         metrics = {'out_seg': dice_hard}
     else:
         if args.net == 'bvnet3d':
-            metrics = [dice_hard(axis=(1,2,3,4))]
+            metrics = [dice3d_hard]
         else:
             metrics = [dice_hard]
 
@@ -102,7 +102,7 @@ def compile_model(args, net_input_shape, uncomp_model):
 
 def plot_training(training_history, arguments):
     f, (ax1, ax2) = plt.subplots(2, sharex=True, figsize=(10, 10))
-    f.suptitle(arguments.net, fontsize=18)
+    #f.suptitle(arguments.net, fontsize=18)
 
     if arguments.net.find('caps') != -1:
         ax1.plot(training_history.history['out_seg_dice_hard'])
@@ -158,4 +158,4 @@ def train(args, train_list, val_list, u_model, net_input_shape):
         callbacks=callbacks,
         verbose=1)
     # Plot the training data collected
-    plot_training(history, args)
+    #plot_training(history, args)

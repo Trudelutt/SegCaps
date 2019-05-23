@@ -30,7 +30,7 @@ K.set_image_data_format('channels_last')
 from keras.utils import print_summary
 
 from load_3D_data import generate_test_batches
-from preprossesing import get_training_patches, from_patches_to_numpy
+from preprossesing import get_training_patches, from_patches_to_numpy, get_predict_patches, get_preprossed_numpy_arrays_from_file
 
 
 def threshold_mask(raw_output, threshold):
@@ -211,30 +211,37 @@ def test(args, test_list, model_list, net_input_shape):
             print(img[0])
             sitk_img = sitk.ReadImage(img[0])
             img_data = sitk.GetArrayFromImage(sitk_img)
+            num_slices = img_data.shape[0]
 
             if args.net == 'bvnet3d':
                 num_slices_before_padding = img_data.shape[0]
-                pred_img, pred_mask, orgshape = get_training_patches([[img[0], img[1]]], args.label, remove_only_background_patches=False, return_shape=True)
-                num_slices = pred_mask.shape[0]
+                numpy_image, numpy_label = get_preprossed_numpy_arrays_from_file(img[0], img[1])
+                patch_img, patch_mask, orgshape = get_predict_patches(numpy_image, numpy_label)
+                output_array = np.zeros(orgshape)
+                count_patches = 0
+                with tqdm(total=patch_img.shape[0], desc='  Predict patch ') as t:
+                    for patch_index in range(patch_img.shape[0]):
+                        output_array[patch_mask[patch_index][1][0]:patch_mask[patch_index][1][1], \
+                        patch_mask[patch_index][1][2]:patch_mask[patch_index][1][3], \
+                        patch_mask[patch_index][1][4]:patch_mask[patch_index][1][5] ] = eval_model.predict(patch_img[patch_index:patch_index+1])
+                        t.update()
             else:
                 num_slices = img_data.shape[0]
 
-            output_array = eval_model.predict_generator(generate_test_batches(args,args.label, args.data_root_dir, [img],
-                                                                              net_input_shape,
-                                                                              batchSize=1,
-                                                                              numSlices=args.slices,
-                                                                              subSampAmt=0,
-                                                                              stride=1),
-                                                        steps=num_slices, max_queue_size=1, workers=1,
-                                                        use_multiprocessing=False, verbose=1)
+                output_array = eval_model.predict_generator(generate_test_batches(args,args.label, args.data_root_dir, [img],
+                                                                                  net_input_shape,
+                                                                                  batchSize=1,
+                                                                                  numSlices=args.slices,
+                                                                                  subSampAmt=0,
+                                                                                  stride=1),
+                                                            steps=num_slices, max_queue_size=1, workers=1,
+                                                            use_multiprocessing=False, verbose=1)
 
             if args.net.find('caps') != -1:
                 output = output_array[0][:,:,:,0]
                 #recon = output_array[1][:,:,:,0]
             elif args.net == 'bvnet3d':
-                output = from_patches_to_numpy(output_array, orgshape)
-                output= output[:num_slices_before_padding]
-                output_array = output.reshape(img_data.shape)
+                output= output_array[:num_slices,:,:,0]
 
             else:
                 output = output_array[:,:,:,0]
@@ -266,7 +273,7 @@ def test(args, test_list, model_list, net_input_shape):
 
             creat_qual_figure(img_data, raw_prediction, fig_out_dir , img)
             creat_qual_figure(img_data, post_prediction, fig_out_dir ,  (img[0].replace('CCTA', 'CCTA_post'), img[1].replace(args.label, args.label + '_post')))
-            if args.frangi_mode == "frangi_comb":
+            if args.frangi_mode == "frangi_comb" or args.frangi_mode == 'frangi_input':
                 sitk_frangi = sitk.ReadImage(img[0].replace('CCTA', 'CCTA_Frangi'))
                 frangi_data = sitk.GetArrayFromImage(sitk_frangi)
                 creat_qual_figure(frangi_data, raw_prediction, fig_out_dir , (img[0].replace('CCTA', 'CCTA_Frangi'), img[1].replace(args.label, args.label + '_Frangi')))
