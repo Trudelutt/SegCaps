@@ -69,7 +69,7 @@ def remove_noise(raw_output):
 
     #thresholded_mask = scipy.ndimage.morphology.binary_fill_holes(thresholded_mask).astype(np.uint8)
 
-    return thresholded_mask
+    return thresholded_mask.astype(np.uint8)
 
 def create_and_write_viz_nii(name, meta_sitk, pred, gt):
     print("Write viz nii file...")
@@ -211,6 +211,11 @@ def test(args, test_list, model_list, net_input_shape):
             print(img[0])
             sitk_img = sitk.ReadImage(img[0])
             img_data = sitk.GetArrayFromImage(sitk_img)
+            if '3Dircadb' in img[0]:
+                max_value = 700
+                min_value = -300
+                img_data[img_data > max_value] = max_value
+                img_data[img_data < min_value] = min_value
             num_slices = img_data.shape[0]
 
             if args.net == 'bvnet3d':

@@ -77,6 +77,11 @@ def get_preprossed_numpy_arrays_from_file(image_path, label_path):
     numpy_image = sitk.GetArrayFromImage(sitk_image).astype(np.float32)
     sitk_label  = sitk.ReadImage(label_path,sitk.sitkUInt8 )
     numpy_label = sitk.GetArrayFromImage(sitk_label).astype(np.uint8)
+    if '3Dircadb' in image_path:
+        max_value = 700
+        min_value = -300
+        numpy_image[numpy_image> max_value] = max_value
+        numpy_image[numpy_image < min_value] = min_value
     if not np.array_equal(np.unique(numpy_label), np.array([0,1])):
         #print("numpy is not binary mask")
         #numpy_label = numpy_label / np.max(numpy_label)

@@ -141,6 +141,8 @@ def plot_training(training_history, arguments):
 def train(args, train_list, val_list, u_model, net_input_shape):
     # Compile the loaded model
     model = compile_model(args=args, net_input_shape=net_input_shape, uncomp_model=u_model)
+    if not args.weights_path == '':
+        model.load_weights(args.weights_path)
     # Set the callbacks
     callbacks = get_callbacks(args)
     # Training the network
